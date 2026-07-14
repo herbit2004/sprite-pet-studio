@@ -60,15 +60,14 @@ struct StudioCard<Content: View>: View {
             .padding(16)
             .background(
                 RoundedRectangle(cornerRadius: StudioTheme.cardRadius, style: .continuous)
-                    .fill(.background.opacity(0.86))
-                    .shadow(color: .black.opacity(0.06), radius: 14, y: 5)
+                    .fill(.background.opacity(0.66))
+                    .shadow(color: .black.opacity(0.035), radius: 12, y: 4)
             )
             .overlay {
-                RoundedRectangle(cornerRadius: StudioTheme.cardRadius, style: .continuous)
-                    .stroke(
-                        isSelected ? StudioTheme.accent : Color.secondary.opacity(0.13),
-                        lineWidth: isSelected ? 2 : 1
-                    )
+                if isSelected {
+                    RoundedRectangle(cornerRadius: StudioTheme.cardRadius, style: .continuous)
+                        .stroke(StudioTheme.accent, lineWidth: 1.5)
+                }
             }
     }
 }
@@ -124,11 +123,7 @@ struct StudioGroupBoxStyle: GroupBoxStyle {
         .padding(14)
         .background(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(.background.opacity(0.84))
+                .fill(.background.opacity(0.58))
         )
-        .overlay {
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .stroke(Color.secondary.opacity(0.12))
-        }
     }
 }

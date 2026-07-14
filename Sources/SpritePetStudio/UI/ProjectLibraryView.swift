@@ -112,6 +112,7 @@ struct ProjectLibraryView: View {
             }
             ActionLibraryView(model: model)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
 
     private func projectCard(_ project: PetProjectDefinition) -> some View {
