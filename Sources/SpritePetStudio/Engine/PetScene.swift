@@ -8,6 +8,7 @@ final class PetScene: SKScene {
     private var currentAction: PetActionDefinition?
     private var frameIndex = 0
     private var playbackDirection = 1
+    private var completedPasses = 0
     private var frameStartedAt: TimeInterval?
     private var lastUpdateTime: TimeInterval = 0
     private var viewportScale: CGFloat = 1
@@ -37,6 +38,7 @@ final class PetScene: SKScene {
         sprite.size = size
         currentAction = nil
         frameIndex = 0
+        completedPasses = 0
         frameStartedAt = nil
         if let action = project.defaultAction {
             play(action, force: true, restart: true)
@@ -79,6 +81,7 @@ final class PetScene: SKScene {
         currentAction = action
         frameIndex = 0
         playbackDirection = 1
+        completedPasses = 0
         frameStartedAt = nil
         renderFrame(frames[0])
     }
@@ -135,10 +138,15 @@ final class PetScene: SKScene {
             frameIndex += playbackDirection
         case .once:
             if frameIndex >= frames.count - 1 {
-                onActionFinished?(action.id)
-                return
+                completedPasses += 1
+                if completedPasses >= max(1, action.repeatCount) {
+                    onActionFinished?(action.id)
+                    return
+                }
+                frameIndex = 0
+            } else {
+                frameIndex += 1
             }
-            frameIndex += 1
         case .holdLast:
             frameIndex = min(frameIndex + 1, frames.count - 1)
         case .angleControlled:

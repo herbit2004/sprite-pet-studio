@@ -13,7 +13,7 @@ my-pet/
 
 - `pet.json`：工程 ID、显示名称和图集路径。
 - `spritesheet.png`：唯一的帧图集；工程内部没有独立帧目录。
-- `studio.json`：工程配置快照、动作播放、逐帧草稿调整和触发器。
+- `studio.json`：工程配置快照、动作播放（包括指定次数）、逐帧草稿调整和触发器。
 
 每个工程还保存自己的桌面显示开关与窗口坐标。它们只属于 SpritePet Studio 运行状态，不影响 PNG 图集，也不妨碍 Codex 忽略 `studio.json` 后继续使用宠物包。
 

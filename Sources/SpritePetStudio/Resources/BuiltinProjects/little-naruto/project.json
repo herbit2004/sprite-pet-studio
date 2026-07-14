@@ -1,238 +1,1052 @@
 {
-  "actions" : [
+  "actions": [
     {
-      "frames" : [
-        { "angleDegrees" : null, "column" : 0, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000001", "offsetX" : 0, "offsetY" : 0, "row" : 0, "scale" : 1 },
-        { "angleDegrees" : null, "column" : 1, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000002", "offsetX" : 0, "offsetY" : 0, "row" : 0, "scale" : 1 },
-        { "angleDegrees" : null, "column" : 2, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000003", "offsetX" : 0, "offsetY" : 0, "row" : 0, "scale" : 1 },
-        { "angleDegrees" : null, "column" : 3, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000004", "offsetX" : 0, "offsetY" : 0, "row" : 0, "scale" : 1 },
-        { "angleDegrees" : null, "column" : 4, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000005", "offsetX" : 0, "offsetY" : 0, "row" : 0, "scale" : 1 },
-        { "angleDegrees" : null, "column" : 5, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000006", "offsetX" : 0, "offsetY" : 0, "row" : 0, "scale" : 1 },
-        { "angleDegrees" : null, "column" : 6, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000007", "offsetX" : 0, "offsetY" : 0, "row" : 0, "scale" : 1 }
+      "frames": [
+        {
+          "column": 0,
+          "durationMultiplier": 5,
+          "id": "00000000-0000-0000-0000-000000000001",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 0,
+          "scale": 1
+        },
+        {
+          "column": 1,
+          "durationMultiplier": 2,
+          "id": "00000000-0000-0000-0000-000000000002",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 0,
+          "scale": 1
+        },
+        {
+          "column": 2,
+          "durationMultiplier": 0.5,
+          "id": "00000000-0000-0000-0000-000000000003",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 0,
+          "scale": 1
+        },
+        {
+          "column": 3,
+          "durationMultiplier": 0.45000000000000007,
+          "id": "00000000-0000-0000-0000-000000000004",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 0,
+          "scale": 1
+        },
+        {
+          "column": 4,
+          "durationMultiplier": 0.5,
+          "id": "00000000-0000-0000-0000-000000000005",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 0,
+          "scale": 1
+        },
+        {
+          "column": 5,
+          "durationMultiplier": 2,
+          "id": "00000000-0000-0000-0000-000000000006",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 0,
+          "scale": 1
+        },
+        {
+          "column": 6,
+          "durationMultiplier": 2,
+          "id": "00000000-0000-0000-0000-000000000007",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 0,
+          "scale": 1
+        }
       ],
-      "framesPerSecond" : 6,
-      "id" : "idle",
-      "interruption" : "always",
-      "isEnabled" : true,
-      "name" : "常态",
-      "playback" : "loop",
-      "priority" : 0,
-      "triggers" : [
-        { "cooldownSeconds" : 0, "distance" : 160, "hour" : 12, "id" : "10000000-0000-0000-0000-000000000001", "idleSeconds" : 30, "isEnabled" : true, "kind" : "appLaunch", "maximumIntervalSeconds" : 45, "minimumIntervalSeconds" : 15, "minute" : 0, "randomWeight" : 1, "stringValue" : "" },
-        { "cooldownSeconds" : 0, "distance" : 160, "hour" : 12, "id" : "10000000-0000-0000-0000-000000000002", "idleSeconds" : 30, "isEnabled" : true, "kind" : "dragEnd", "maximumIntervalSeconds" : 45, "minimumIntervalSeconds" : 15, "minute" : 0, "randomWeight" : 1, "stringValue" : "" },
-        { "cooldownSeconds" : 0, "distance" : 160, "hour" : 12, "id" : "10000000-0000-0000-0000-000000000003", "idleSeconds" : 30, "isEnabled" : true, "kind" : "external", "maximumIntervalSeconds" : 45, "minimumIntervalSeconds" : 15, "minute" : 0, "randomWeight" : 1, "stringValue" : "idle" }
-      ]
+      "framesPerSecond": 6,
+      "id": "idle",
+      "interruption": "always",
+      "isEnabled": true,
+      "name": "常态（6 帧 + 中立帧）",
+      "playback": "loop",
+      "priority": 0,
+      "triggers": [
+        {
+          "cooldownSeconds": 0,
+          "distance": 160,
+          "hour": 12,
+          "id": "10000000-0000-0000-0000-000000000001",
+          "idleSeconds": 30,
+          "isEnabled": true,
+          "kind": "appLaunch",
+          "maximumIntervalSeconds": 45,
+          "minimumIntervalSeconds": 15,
+          "minute": 0,
+          "randomWeight": 1,
+          "stringValue": ""
+        },
+        {
+          "cooldownSeconds": 0,
+          "distance": 160,
+          "hour": 12,
+          "id": "10000000-0000-0000-0000-000000000002",
+          "idleSeconds": 30,
+          "isEnabled": true,
+          "kind": "dragEnd",
+          "maximumIntervalSeconds": 45,
+          "minimumIntervalSeconds": 15,
+          "minute": 0,
+          "randomWeight": 1,
+          "stringValue": ""
+        },
+        {
+          "cooldownSeconds": 0,
+          "distance": 160,
+          "hour": 12,
+          "id": "10000000-0000-0000-0000-000000000003",
+          "idleSeconds": 30,
+          "isEnabled": true,
+          "kind": "external",
+          "maximumIntervalSeconds": 45,
+          "minimumIntervalSeconds": 15,
+          "minute": 0,
+          "randomWeight": 1,
+          "stringValue": "idle"
+        }
+      ],
+      "repeatCount": 1
     },
     {
-      "frames" : [
-        { "angleDegrees" : null, "column" : 0, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000101", "offsetX" : 0, "offsetY" : 0, "row" : 1, "scale" : 1 },
-        { "angleDegrees" : null, "column" : 1, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000102", "offsetX" : 0, "offsetY" : 0, "row" : 1, "scale" : 1 },
-        { "angleDegrees" : null, "column" : 2, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000103", "offsetX" : 0, "offsetY" : 0, "row" : 1, "scale" : 1 },
-        { "angleDegrees" : null, "column" : 3, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000104", "offsetX" : 0, "offsetY" : 0, "row" : 1, "scale" : 1 },
-        { "angleDegrees" : null, "column" : 4, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000105", "offsetX" : 0, "offsetY" : 0, "row" : 1, "scale" : 1 },
-        { "angleDegrees" : null, "column" : 5, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000106", "offsetX" : 0, "offsetY" : 0, "row" : 1, "scale" : 1 },
-        { "angleDegrees" : null, "column" : 6, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000107", "offsetX" : 0, "offsetY" : 0, "row" : 1, "scale" : 1 },
-        { "angleDegrees" : null, "column" : 7, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000108", "offsetX" : 0, "offsetY" : 0, "row" : 1, "scale" : 1 }
+      "frames": [
+        {
+          "column": 0,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000101",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 1,
+          "scale": 1
+        },
+        {
+          "column": 1,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000102",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 1,
+          "scale": 1
+        },
+        {
+          "column": 2,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000103",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 1,
+          "scale": 1
+        },
+        {
+          "column": 3,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000104",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 1,
+          "scale": 1
+        },
+        {
+          "column": 4,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000105",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 1,
+          "scale": 1
+        },
+        {
+          "column": 5,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000106",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 1,
+          "scale": 1
+        },
+        {
+          "column": 6,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000107",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 1,
+          "scale": 1
+        },
+        {
+          "column": 7,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000108",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 1,
+          "scale": 1
+        }
       ],
-      "framesPerSecond" : 16,
-      "id" : "running-right",
-      "interruption" : "always",
-      "isEnabled" : true,
-      "name" : "向右火影跑",
-      "playback" : "loop",
-      "priority" : 70,
-      "triggers" : [
-        { "cooldownSeconds" : 0, "distance" : 160, "hour" : 12, "id" : "10000000-0000-0000-0000-000000000101", "idleSeconds" : 30, "isEnabled" : true, "kind" : "dragRight", "maximumIntervalSeconds" : 45, "minimumIntervalSeconds" : 15, "minute" : 0, "randomWeight" : 1, "stringValue" : "" }
-      ]
+      "framesPerSecond": 8,
+      "id": "running-right",
+      "interruption": "always",
+      "isEnabled": true,
+      "name": "向右跑",
+      "playback": "loop",
+      "priority": 70,
+      "triggers": [
+        {
+          "cooldownSeconds": 0,
+          "distance": 160,
+          "hour": 12,
+          "id": "10000000-0000-0000-0000-000000000101",
+          "idleSeconds": 30,
+          "isEnabled": true,
+          "kind": "dragRight",
+          "maximumIntervalSeconds": 45,
+          "minimumIntervalSeconds": 15,
+          "minute": 0,
+          "randomWeight": 1,
+          "stringValue": ""
+        }
+      ],
+      "repeatCount": 1
     },
     {
-      "frames" : [
-        { "angleDegrees" : null, "column" : 0, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000201", "offsetX" : 0, "offsetY" : 0, "row" : 2, "scale" : 1 },
-        { "angleDegrees" : null, "column" : 1, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000202", "offsetX" : 0, "offsetY" : 0, "row" : 2, "scale" : 1 },
-        { "angleDegrees" : null, "column" : 2, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000203", "offsetX" : 0, "offsetY" : 0, "row" : 2, "scale" : 1 },
-        { "angleDegrees" : null, "column" : 3, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000204", "offsetX" : 0, "offsetY" : 0, "row" : 2, "scale" : 1 },
-        { "angleDegrees" : null, "column" : 4, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000205", "offsetX" : 0, "offsetY" : 0, "row" : 2, "scale" : 1 },
-        { "angleDegrees" : null, "column" : 5, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000206", "offsetX" : 0, "offsetY" : 0, "row" : 2, "scale" : 1 },
-        { "angleDegrees" : null, "column" : 6, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000207", "offsetX" : 0, "offsetY" : 0, "row" : 2, "scale" : 1 },
-        { "angleDegrees" : null, "column" : 7, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000208", "offsetX" : 0, "offsetY" : 0, "row" : 2, "scale" : 1 }
+      "frames": [
+        {
+          "column": 0,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000201",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 2,
+          "scale": 1
+        },
+        {
+          "column": 1,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000202",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 2,
+          "scale": 1
+        },
+        {
+          "column": 2,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000203",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 2,
+          "scale": 1
+        },
+        {
+          "column": 3,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000204",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 2,
+          "scale": 1
+        },
+        {
+          "column": 4,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000205",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 2,
+          "scale": 1
+        },
+        {
+          "column": 5,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000206",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 2,
+          "scale": 1
+        },
+        {
+          "column": 6,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000207",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 2,
+          "scale": 1
+        },
+        {
+          "column": 7,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000208",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 2,
+          "scale": 1
+        }
       ],
-      "framesPerSecond" : 16,
-      "id" : "running-left",
-      "interruption" : "always",
-      "isEnabled" : true,
-      "name" : "向左火影跑",
-      "playback" : "loop",
-      "priority" : 70,
-      "triggers" : [
-        { "cooldownSeconds" : 0, "distance" : 160, "hour" : 12, "id" : "10000000-0000-0000-0000-000000000201", "idleSeconds" : 30, "isEnabled" : true, "kind" : "dragLeft", "maximumIntervalSeconds" : 45, "minimumIntervalSeconds" : 15, "minute" : 0, "randomWeight" : 1, "stringValue" : "" }
-      ]
+      "framesPerSecond": 8,
+      "id": "running-left",
+      "interruption": "always",
+      "isEnabled": true,
+      "name": "向左跑",
+      "playback": "loop",
+      "priority": 70,
+      "triggers": [
+        {
+          "cooldownSeconds": 0,
+          "distance": 160,
+          "hour": 12,
+          "id": "10000000-0000-0000-0000-000000000201",
+          "idleSeconds": 30,
+          "isEnabled": true,
+          "kind": "dragLeft",
+          "maximumIntervalSeconds": 45,
+          "minimumIntervalSeconds": 15,
+          "minute": 0,
+          "randomWeight": 1,
+          "stringValue": ""
+        }
+      ],
+      "repeatCount": 1
     },
     {
-      "frames" : [
-        { "angleDegrees" : null, "column" : 0, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000301", "offsetX" : 0, "offsetY" : 0, "row" : 3, "scale" : 1 },
-        { "angleDegrees" : null, "column" : 1, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000302", "offsetX" : 0, "offsetY" : 0, "row" : 3, "scale" : 1 },
-        { "angleDegrees" : null, "column" : 2, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000303", "offsetX" : 0, "offsetY" : 0, "row" : 3, "scale" : 1 },
-        { "angleDegrees" : null, "column" : 3, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000304", "offsetX" : 0, "offsetY" : 0, "row" : 3, "scale" : 1 }
+      "frames": [
+        {
+          "column": 0,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000301",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 3,
+          "scale": 1
+        },
+        {
+          "column": 1,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000302",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 3,
+          "scale": 1
+        },
+        {
+          "column": 2,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000303",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 3,
+          "scale": 1
+        },
+        {
+          "column": 3,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000304",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 3,
+          "scale": 1
+        }
       ],
-      "framesPerSecond" : 8,
-      "id" : "waving",
-      "interruption" : "higherPriority",
-      "isEnabled" : true,
-      "name" : "挥手",
-      "playback" : "once",
-      "priority" : 60,
-      "triggers" : [
-        { "cooldownSeconds" : 0.5, "distance" : 160, "hour" : 12, "id" : "10000000-0000-0000-0000-000000000301", "idleSeconds" : 30, "isEnabled" : true, "kind" : "singleClick", "maximumIntervalSeconds" : 45, "minimumIntervalSeconds" : 15, "minute" : 0, "randomWeight" : 1, "stringValue" : "" },
-        { "cooldownSeconds" : 2, "distance" : 160, "hour" : 12, "id" : "10000000-0000-0000-0000-000000000302", "idleSeconds" : 30, "isEnabled" : true, "kind" : "systemWake", "maximumIntervalSeconds" : 45, "minimumIntervalSeconds" : 15, "minute" : 0, "randomWeight" : 1, "stringValue" : "" }
-      ]
+      "framesPerSecond": 8,
+      "id": "waving",
+      "interruption": "higherPriority",
+      "isEnabled": true,
+      "name": "挥手",
+      "playback": "once",
+      "priority": 60,
+      "triggers": [
+        {
+          "cooldownSeconds": 0.5,
+          "distance": 160,
+          "hour": 12,
+          "id": "10000000-0000-0000-0000-000000000301",
+          "idleSeconds": 30,
+          "isEnabled": true,
+          "kind": "mouseExit",
+          "maximumIntervalSeconds": 45,
+          "minimumIntervalSeconds": 15,
+          "minute": 0,
+          "randomWeight": 1,
+          "stringValue": ""
+        },
+        {
+          "cooldownSeconds": 2,
+          "distance": 160,
+          "hour": 12,
+          "id": "10000000-0000-0000-0000-000000000302",
+          "idleSeconds": 30,
+          "isEnabled": true,
+          "kind": "systemWake",
+          "maximumIntervalSeconds": 45,
+          "minimumIntervalSeconds": 15,
+          "minute": 0,
+          "randomWeight": 1,
+          "stringValue": ""
+        }
+      ],
+      "repeatCount": 1
     },
     {
-      "frames" : [
-        { "angleDegrees" : null, "column" : 0, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000401", "offsetX" : 0, "offsetY" : 0, "row" : 4, "scale" : 1 },
-        { "angleDegrees" : null, "column" : 1, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000402", "offsetX" : 0, "offsetY" : 0, "row" : 4, "scale" : 1 },
-        { "angleDegrees" : null, "column" : 2, "durationMultiplier" : 1.25, "id" : "00000000-0000-0000-0000-000000000403", "offsetX" : 0, "offsetY" : 0, "row" : 4, "scale" : 1 },
-        { "angleDegrees" : null, "column" : 3, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000404", "offsetX" : 0, "offsetY" : 0, "row" : 4, "scale" : 1 },
-        { "angleDegrees" : null, "column" : 4, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000405", "offsetX" : 0, "offsetY" : 0, "row" : 4, "scale" : 1 }
+      "frames": [
+        {
+          "column": 0,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000401",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 4,
+          "scale": 1
+        },
+        {
+          "column": 1,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000402",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 4,
+          "scale": 1
+        },
+        {
+          "column": 2,
+          "durationMultiplier": 1.25,
+          "id": "00000000-0000-0000-0000-000000000403",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 4,
+          "scale": 1
+        },
+        {
+          "column": 3,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000404",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 4,
+          "scale": 1
+        },
+        {
+          "column": 4,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000405",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 4,
+          "scale": 1
+        }
       ],
-      "framesPerSecond" : 10,
-      "id" : "ghost-face",
-      "interruption" : "never",
-      "isEnabled" : true,
-      "name" : "凑近做鬼脸",
-      "playback" : "once",
-      "priority" : 85,
-      "triggers" : [
-        { "cooldownSeconds" : 1.5, "distance" : 86, "hour" : 12, "id" : "10000000-0000-0000-0000-000000000401", "idleSeconds" : 30, "isEnabled" : true, "kind" : "mouseNear", "maximumIntervalSeconds" : 45, "minimumIntervalSeconds" : 15, "minute" : 0, "randomWeight" : 1, "stringValue" : "" }
-      ]
+      "framesPerSecond": 10,
+      "id": "jumping",
+      "interruption": "never",
+      "isEnabled": true,
+      "name": "跳跃 / 悬浮动作",
+      "playback": "once",
+      "priority": 85,
+      "triggers": [
+        {
+          "cooldownSeconds": 1.5,
+          "distance": 86,
+          "hour": 12,
+          "id": "10000000-0000-0000-0000-000000000401",
+          "idleSeconds": 30,
+          "isEnabled": true,
+          "kind": "mouseNear",
+          "maximumIntervalSeconds": 45,
+          "minimumIntervalSeconds": 15,
+          "minute": 0,
+          "randomWeight": 1,
+          "stringValue": ""
+        },
+        {
+          "cooldownSeconds": 0,
+          "distance": 160,
+          "hour": 12,
+          "id": "DE4E7C8D-ECC0-4CF3-9721-5CD51E860204",
+          "idleSeconds": 30,
+          "isEnabled": true,
+          "kind": "activeAppChanged",
+          "maximumIntervalSeconds": 45,
+          "minimumIntervalSeconds": 15,
+          "minute": 0,
+          "randomWeight": 1,
+          "stringValue": ""
+        }
+      ],
+      "repeatCount": 1
     },
     {
-      "frames" : [
-        { "angleDegrees" : null, "column" : 0, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000501", "offsetX" : 0, "offsetY" : 0, "row" : 5, "scale" : 1 },
-        { "angleDegrees" : null, "column" : 1, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000502", "offsetX" : 0, "offsetY" : 0, "row" : 5, "scale" : 1 },
-        { "angleDegrees" : null, "column" : 2, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000503", "offsetX" : 0, "offsetY" : 0, "row" : 5, "scale" : 1 },
-        { "angleDegrees" : null, "column" : 3, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000504", "offsetX" : 0, "offsetY" : 0, "row" : 5, "scale" : 1 },
-        { "angleDegrees" : null, "column" : 4, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000505", "offsetX" : 0, "offsetY" : 0, "row" : 5, "scale" : 1 },
-        { "angleDegrees" : null, "column" : 5, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000506", "offsetX" : 0, "offsetY" : 0, "row" : 5, "scale" : 1 },
-        { "angleDegrees" : null, "column" : 6, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000507", "offsetX" : 0, "offsetY" : 0, "row" : 5, "scale" : 1 },
-        { "angleDegrees" : null, "column" : 7, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000508", "offsetX" : 0, "offsetY" : 0, "row" : 5, "scale" : 1 }
+      "frames": [
+        {
+          "column": 0,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000501",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 5,
+          "scale": 1
+        },
+        {
+          "column": 1,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000502",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 5,
+          "scale": 1
+        },
+        {
+          "column": 2,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000503",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 5,
+          "scale": 1
+        },
+        {
+          "column": 3,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000504",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 5,
+          "scale": 1
+        },
+        {
+          "column": 4,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000505",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 5,
+          "scale": 1
+        },
+        {
+          "column": 5,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000506",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 5,
+          "scale": 1
+        },
+        {
+          "column": 6,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000507",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 5,
+          "scale": 1
+        },
+        {
+          "column": 7,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000508",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 5,
+          "scale": 1
+        }
       ],
-      "framesPerSecond" : 8,
-      "id" : "failed",
-      "interruption" : "never",
-      "isEnabled" : true,
-      "name" : "失败沮丧",
-      "playback" : "once",
-      "priority" : 90,
-      "triggers" : [
-        { "cooldownSeconds" : 1, "distance" : 160, "hour" : 12, "id" : "10000000-0000-0000-0000-000000000501", "idleSeconds" : 30, "isEnabled" : true, "kind" : "external", "maximumIntervalSeconds" : 45, "minimumIntervalSeconds" : 15, "minute" : 0, "randomWeight" : 1, "stringValue" : "failed" }
-      ]
+      "framesPerSecond": 8,
+      "id": "failed",
+      "interruption": "never",
+      "isEnabled": true,
+      "name": "失败",
+      "playback": "once",
+      "priority": 90,
+      "triggers": [
+        {
+          "cooldownSeconds": 1,
+          "distance": 160,
+          "hour": 12,
+          "id": "10000000-0000-0000-0000-000000000501",
+          "idleSeconds": 30,
+          "isEnabled": true,
+          "kind": "external",
+          "maximumIntervalSeconds": 45,
+          "minimumIntervalSeconds": 15,
+          "minute": 0,
+          "randomWeight": 1,
+          "stringValue": "failed"
+        }
+      ],
+      "repeatCount": 1
     },
     {
-      "frames" : [
-        { "angleDegrees" : null, "column" : 0, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000601", "offsetX" : 0, "offsetY" : 0, "row" : 6, "scale" : 1 },
-        { "angleDegrees" : null, "column" : 1, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000602", "offsetX" : 0, "offsetY" : 0, "row" : 6, "scale" : 1 },
-        { "angleDegrees" : null, "column" : 2, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000603", "offsetX" : 0, "offsetY" : 0, "row" : 6, "scale" : 1 },
-        { "angleDegrees" : null, "column" : 3, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000604", "offsetX" : 0, "offsetY" : 0, "row" : 6, "scale" : 1 },
-        { "angleDegrees" : null, "column" : 4, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000605", "offsetX" : 0, "offsetY" : 0, "row" : 6, "scale" : 1 },
-        { "angleDegrees" : null, "column" : 5, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000606", "offsetX" : 0, "offsetY" : 0, "row" : 6, "scale" : 1 }
+      "frames": [
+        {
+          "column": 0,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000601",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 6,
+          "scale": 1
+        },
+        {
+          "column": 1,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000602",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 6,
+          "scale": 1
+        },
+        {
+          "column": 2,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000603",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 6,
+          "scale": 1
+        },
+        {
+          "column": 3,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000604",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 6,
+          "scale": 1
+        },
+        {
+          "column": 4,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000605",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 6,
+          "scale": 1
+        },
+        {
+          "column": 5,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000606",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 6,
+          "scale": 1
+        }
       ],
-      "framesPerSecond" : 5,
-      "id" : "ramen",
-      "interruption" : "higherPriority",
-      "isEnabled" : true,
-      "name" : "蹲下吃一乐拉面",
-      "playback" : "loop",
-      "priority" : 20,
-      "triggers" : [
-        { "cooldownSeconds" : 30, "distance" : 160, "hour" : 12, "id" : "10000000-0000-0000-0000-000000000601", "idleSeconds" : 45, "isEnabled" : true, "kind" : "idle", "maximumIntervalSeconds" : 45, "minimumIntervalSeconds" : 15, "minute" : 0, "randomWeight" : 1, "stringValue" : "" },
-        { "cooldownSeconds" : 30, "distance" : 160, "hour" : 12, "id" : "10000000-0000-0000-0000-000000000602", "idleSeconds" : 30, "isEnabled" : true, "kind" : "random", "maximumIntervalSeconds" : 90, "minimumIntervalSeconds" : 45, "minute" : 0, "randomWeight" : 0.6, "stringValue" : "" }
-      ]
+      "framesPerSecond": 5,
+      "id": "waiting",
+      "interruption": "higherPriority",
+      "isEnabled": true,
+      "name": "等待",
+      "playback": "loop",
+      "priority": 20,
+      "triggers": [
+        {
+          "cooldownSeconds": 60,
+          "distance": 160,
+          "hour": 12,
+          "id": "10000000-0000-0000-0000-000000000602",
+          "idleSeconds": 30,
+          "isEnabled": true,
+          "kind": "random",
+          "maximumIntervalSeconds": 90,
+          "minimumIntervalSeconds": 45,
+          "minute": 0,
+          "randomWeight": 0.6,
+          "stringValue": ""
+        }
+      ],
+      "repeatCount": 1
     },
     {
-      "frames" : [
-        { "angleDegrees" : null, "column" : 0, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000701", "offsetX" : 0, "offsetY" : 0, "row" : 7, "scale" : 1 },
-        { "angleDegrees" : null, "column" : 1, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000702", "offsetX" : 0, "offsetY" : 0, "row" : 7, "scale" : 1 },
-        { "angleDegrees" : null, "column" : 2, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000703", "offsetX" : 0, "offsetY" : 0, "row" : 7, "scale" : 1 },
-        { "angleDegrees" : null, "column" : 3, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000704", "offsetX" : 0, "offsetY" : 0, "row" : 7, "scale" : 1 },
-        { "angleDegrees" : null, "column" : 4, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000705", "offsetX" : 0, "offsetY" : 0, "row" : 7, "scale" : 1 },
-        { "angleDegrees" : null, "column" : 5, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000706", "offsetX" : 0, "offsetY" : 0, "row" : 7, "scale" : 1 }
+      "frames": [
+        {
+          "column": 0,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000701",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 7,
+          "scale": 1
+        },
+        {
+          "column": 1,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000702",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 7,
+          "scale": 1
+        },
+        {
+          "column": 2,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000703",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 7,
+          "scale": 1
+        },
+        {
+          "column": 3,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000704",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 7,
+          "scale": 1
+        },
+        {
+          "column": 4,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000705",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 7,
+          "scale": 1
+        },
+        {
+          "column": 5,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000706",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 7,
+          "scale": 1
+        }
       ],
-      "framesPerSecond" : 8,
-      "id" : "painting",
-      "interruption" : "always",
-      "isEnabled" : true,
-      "name" : "拿刷子刷屏幕",
-      "playback" : "loop",
-      "priority" : 55,
-      "triggers" : [
-        { "cooldownSeconds" : 0, "distance" : 160, "hour" : 12, "id" : "10000000-0000-0000-0000-000000000701", "idleSeconds" : 30, "isEnabled" : true, "kind" : "external", "maximumIntervalSeconds" : 45, "minimumIntervalSeconds" : 15, "minute" : 0, "randomWeight" : 1, "stringValue" : "task-running" }
-      ]
+      "framesPerSecond": 8,
+      "id": "running",
+      "interruption": "higherPriority",
+      "isEnabled": true,
+      "name": "执行任务",
+      "playback": "loop",
+      "priority": 55,
+      "triggers": [
+        {
+          "cooldownSeconds": 60,
+          "distance": 160,
+          "hour": 12,
+          "id": "10000000-0000-0000-0000-000000000701",
+          "idleSeconds": 30,
+          "isEnabled": true,
+          "kind": "random",
+          "maximumIntervalSeconds": 90,
+          "minimumIntervalSeconds": 45,
+          "minute": 0,
+          "randomWeight": 0.6,
+          "stringValue": "task-running"
+        }
+      ],
+      "repeatCount": 1
     },
     {
-      "frames" : [
-        { "angleDegrees" : null, "column" : 0, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000801", "offsetX" : 0, "offsetY" : 0, "row" : 8, "scale" : 1 },
-        { "angleDegrees" : null, "column" : 1, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000802", "offsetX" : 0, "offsetY" : 0, "row" : 8, "scale" : 1 },
-        { "angleDegrees" : null, "column" : 2, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000803", "offsetX" : 0, "offsetY" : 0, "row" : 8, "scale" : 1 },
-        { "angleDegrees" : null, "column" : 3, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000804", "offsetX" : 0, "offsetY" : 0, "row" : 8, "scale" : 1 },
-        { "angleDegrees" : null, "column" : 4, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000805", "offsetX" : 0, "offsetY" : 0, "row" : 8, "scale" : 1 },
-        { "angleDegrees" : null, "column" : 5, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000806", "offsetX" : 0, "offsetY" : 0, "row" : 8, "scale" : 1 }
+      "frames": [
+        {
+          "column": 0,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000801",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 8,
+          "scale": 1
+        },
+        {
+          "column": 1,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000802",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 8,
+          "scale": 1
+        },
+        {
+          "column": 2,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000803",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 8,
+          "scale": 1
+        },
+        {
+          "column": 3,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000804",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 8,
+          "scale": 1
+        },
+        {
+          "column": 4,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000805",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 8,
+          "scale": 1
+        },
+        {
+          "column": 5,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000806",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 8,
+          "scale": 1
+        }
       ],
-      "framesPerSecond" : 7,
-      "id" : "review",
-      "interruption" : "never",
-      "isEnabled" : true,
-      "name" : "抬手思考",
-      "playback" : "once",
-      "priority" : 65,
-      "triggers" : [
-        { "cooldownSeconds" : 1, "distance" : 160, "hour" : 12, "id" : "10000000-0000-0000-0000-000000000801", "idleSeconds" : 30, "isEnabled" : true, "kind" : "doubleClick", "maximumIntervalSeconds" : 45, "minimumIntervalSeconds" : 15, "minute" : 0, "randomWeight" : 1, "stringValue" : "" },
-        { "cooldownSeconds" : 1, "distance" : 160, "hour" : 12, "id" : "10000000-0000-0000-0000-000000000802", "idleSeconds" : 30, "isEnabled" : true, "kind" : "external", "maximumIntervalSeconds" : 45, "minimumIntervalSeconds" : 15, "minute" : 0, "randomWeight" : 1, "stringValue" : "review" }
-      ]
+      "framesPerSecond": 7,
+      "id": "review",
+      "interruption": "never",
+      "isEnabled": true,
+      "name": "检查结果",
+      "playback": "once",
+      "priority": 65,
+      "triggers": [
+        {
+          "cooldownSeconds": 1,
+          "distance": 160,
+          "hour": 12,
+          "id": "10000000-0000-0000-0000-000000000801",
+          "idleSeconds": 30,
+          "isEnabled": true,
+          "kind": "singleClick",
+          "maximumIntervalSeconds": 45,
+          "minimumIntervalSeconds": 15,
+          "minute": 0,
+          "randomWeight": 1,
+          "stringValue": ""
+        },
+        {
+          "cooldownSeconds": 1,
+          "distance": 160,
+          "hour": 12,
+          "id": "10000000-0000-0000-0000-000000000802",
+          "idleSeconds": 30,
+          "isEnabled": true,
+          "kind": "external",
+          "maximumIntervalSeconds": 45,
+          "minimumIntervalSeconds": 15,
+          "minute": 0,
+          "randomWeight": 1,
+          "stringValue": "review"
+        }
+      ],
+      "repeatCount": 1
     },
     {
-      "frames" : [
-        { "angleDegrees" : 0, "column" : 0, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000901", "offsetX" : 0, "offsetY" : 0, "row" : 9, "scale" : 1 },
-        { "angleDegrees" : 22.5, "column" : 1, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000902", "offsetX" : 0, "offsetY" : 0, "row" : 9, "scale" : 1 },
-        { "angleDegrees" : 45, "column" : 2, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000903", "offsetX" : 0, "offsetY" : 0, "row" : 9, "scale" : 1 },
-        { "angleDegrees" : 67.5, "column" : 3, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000904", "offsetX" : 0, "offsetY" : 0, "row" : 9, "scale" : 1 },
-        { "angleDegrees" : 90, "column" : 4, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000905", "offsetX" : 0, "offsetY" : 0, "row" : 9, "scale" : 1 },
-        { "angleDegrees" : 112.5, "column" : 5, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000906", "offsetX" : 0, "offsetY" : 0, "row" : 9, "scale" : 1 },
-        { "angleDegrees" : 135, "column" : 6, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000907", "offsetX" : 0, "offsetY" : 0, "row" : 9, "scale" : 1 },
-        { "angleDegrees" : 157.5, "column" : 7, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000908", "offsetX" : 0, "offsetY" : 0, "row" : 9, "scale" : 1 },
-        { "angleDegrees" : 180, "column" : 0, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000909", "offsetX" : 0, "offsetY" : 0, "row" : 10, "scale" : 1 },
-        { "angleDegrees" : 202.5, "column" : 1, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000910", "offsetX" : 0, "offsetY" : 0, "row" : 10, "scale" : 1 },
-        { "angleDegrees" : 225, "column" : 2, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000911", "offsetX" : 0, "offsetY" : 0, "row" : 10, "scale" : 1 },
-        { "angleDegrees" : 247.5, "column" : 3, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000912", "offsetX" : 0, "offsetY" : 0, "row" : 10, "scale" : 1 },
-        { "angleDegrees" : 270, "column" : 4, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000913", "offsetX" : 0, "offsetY" : 0, "row" : 10, "scale" : 1 },
-        { "angleDegrees" : 292.5, "column" : 5, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000914", "offsetX" : 0, "offsetY" : 0, "row" : 10, "scale" : 1 },
-        { "angleDegrees" : 315, "column" : 6, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000915", "offsetX" : 0, "offsetY" : 0, "row" : 10, "scale" : 1 },
-        { "angleDegrees" : 337.5, "column" : 7, "durationMultiplier" : 1, "id" : "00000000-0000-0000-0000-000000000916", "offsetX" : 0, "offsetY" : 0, "row" : 10, "scale" : 1 }
+      "frames": [
+        {
+          "angleDegrees": 0,
+          "column": 0,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000901",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 9,
+          "scale": 1
+        },
+        {
+          "angleDegrees": 22.5,
+          "column": 1,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000902",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 9,
+          "scale": 1
+        },
+        {
+          "angleDegrees": 45,
+          "column": 2,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000903",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 9,
+          "scale": 1
+        },
+        {
+          "angleDegrees": 67.5,
+          "column": 3,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000904",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 9,
+          "scale": 1
+        },
+        {
+          "angleDegrees": 90,
+          "column": 4,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000905",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 9,
+          "scale": 1
+        },
+        {
+          "angleDegrees": 112.5,
+          "column": 5,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000906",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 9,
+          "scale": 1
+        },
+        {
+          "angleDegrees": 135,
+          "column": 6,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000907",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 9,
+          "scale": 1
+        },
+        {
+          "angleDegrees": 157.5,
+          "column": 7,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000908",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 9,
+          "scale": 1
+        },
+        {
+          "angleDegrees": 180,
+          "column": 0,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000909",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 10,
+          "scale": 1
+        },
+        {
+          "angleDegrees": 202.5,
+          "column": 1,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000910",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 10,
+          "scale": 1
+        },
+        {
+          "angleDegrees": 225,
+          "column": 2,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000911",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 10,
+          "scale": 1
+        },
+        {
+          "angleDegrees": 247.5,
+          "column": 3,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000912",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 10,
+          "scale": 1
+        },
+        {
+          "angleDegrees": 270,
+          "column": 4,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000913",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 10,
+          "scale": 1
+        },
+        {
+          "angleDegrees": 292.5,
+          "column": 5,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000914",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 10,
+          "scale": 1
+        },
+        {
+          "angleDegrees": 315,
+          "column": 6,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000915",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 10,
+          "scale": 1
+        },
+        {
+          "angleDegrees": 337.5,
+          "column": 7,
+          "durationMultiplier": 1,
+          "id": "00000000-0000-0000-0000-000000000916",
+          "offsetX": 0,
+          "offsetY": 0,
+          "row": 10,
+          "scale": 1
+        }
       ],
-      "framesPerSecond" : 60,
-      "id" : "look-around",
-      "interruption" : "higherPriority",
-      "isEnabled" : true,
-      "name" : "360° 跟随鼠标看",
-      "playback" : "angleControlled",
-      "priority" : 25,
-      "triggers" : [
-        { "cooldownSeconds" : 0, "distance" : 520, "hour" : 12, "id" : "10000000-0000-0000-0000-000000000901", "idleSeconds" : 30, "isEnabled" : true, "kind" : "mouseLook", "maximumIntervalSeconds" : 45, "minimumIntervalSeconds" : 15, "minute" : 0, "randomWeight" : 1, "stringValue" : "" }
-      ]
+      "framesPerSecond": 60,
+      "id": "look-around",
+      "interruption": "higherPriority",
+      "isEnabled": true,
+      "name": "16 方向视线跟随",
+      "playback": "angleControlled",
+      "priority": 10,
+      "triggers": [
+        {
+          "cooldownSeconds": 0,
+          "distance": 200,
+          "distanceCondition": "outside",
+          "hour": 12,
+          "id": "10000000-0000-0000-0000-000000000901",
+          "idleSeconds": 30,
+          "isEnabled": true,
+          "kind": "mouseLook",
+          "maximumIntervalSeconds": 45,
+          "minimumIntervalSeconds": 15,
+          "minute": 0,
+          "randomWeight": 1,
+          "stringValue": ""
+        }
+      ],
+      "repeatCount": 1
     }
   ],
-  "atlas" : {
-    "cellHeight" : 208,
-    "cellWidth" : 192,
-    "columns" : 8,
-    "filtering" : "linear",
-    "imagePath" : "builtin://BuiltinProjects/little-naruto/spritesheet.png",
-    "rows" : 11
+  "atlas": {
+    "cellHeight": 208,
+    "cellWidth": 192,
+    "columns": 8,
+    "filtering": "linear",
+    "imagePath": "builtin://BuiltinProjects/little-naruto/spritesheet.png",
+    "rows": 11
   },
-  "author" : "herbit",
-  "defaultActionID" : "idle",
-  "formatVersion" : 1,
-  "id" : "little-naruto-v5",
-  "isBuiltIn" : true,
-  "name" : "小鸣人",
-  "projectDescription" : "戴绿色护目镜、沾着颜料的童年小鸣人。作为桌宠工坊的首个内置工程。"
+  "author": "herbit",
+  "defaultActionID": "idle",
+  "formatVersion": 2,
+  "id": "little-naruto-v5",
+  "isBuiltIn": true,
+  "name": "小鸣人",
+  "projectDescription": "默认配置"
 }

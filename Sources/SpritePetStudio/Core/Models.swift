@@ -229,6 +229,9 @@ struct PetActionDefinition: Codable, Identifiable, Equatable {
     var isEnabled: Bool
     var framesPerSecond: Double
     var playback: PlaybackMode
+    /// Applies only to `.once`, which is presented in the editor as "指定次数".
+    /// A value of 1 preserves the legacy “播放一次” behavior.
+    var repeatCount: Int = 1
     var priority: Int
     var interruption: InterruptionPolicy
     var frames: [PetFrameDefinition]
@@ -245,7 +248,7 @@ enum PlaybackMode: String, Codable, CaseIterable, Identifiable {
     var id: String { rawValue }
     var displayName: String {
         switch self {
-        case .once: return "播放一次"
+        case .once: return "指定次数"
         case .loop: return "持续循环"
         case .pingPong: return "往返循环"
         case .holdLast: return "停在末帧"
@@ -388,6 +391,35 @@ extension PetProjectDefinition {
 }
 
 extension PetActionDefinition {
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case name
+        case isEnabled
+        case framesPerSecond
+        case playback
+        case repeatCount
+        case priority
+        case interruption
+        case frames
+        case triggers
+    }
+
+    /// Older projects do not contain `repeatCount`. Decode them as one pass so
+    /// existing “播放一次” actions keep exactly the same behavior.
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        name = try container.decode(String.self, forKey: .name)
+        isEnabled = try container.decode(Bool.self, forKey: .isEnabled)
+        framesPerSecond = try container.decode(Double.self, forKey: .framesPerSecond)
+        playback = try container.decode(PlaybackMode.self, forKey: .playback)
+        repeatCount = max(1, try container.decodeIfPresent(Int.self, forKey: .repeatCount) ?? 1)
+        priority = try container.decode(Int.self, forKey: .priority)
+        interruption = try container.decode(InterruptionPolicy.self, forKey: .interruption)
+        frames = try container.decode([PetFrameDefinition].self, forKey: .frames)
+        triggers = try container.decode([TriggerRule].self, forKey: .triggers)
+    }
+
     var playableFrames: [PetFrameDefinition] {
         frames
     }
