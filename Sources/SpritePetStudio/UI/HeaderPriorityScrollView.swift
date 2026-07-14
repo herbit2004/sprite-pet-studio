@@ -1,153 +1,185 @@
 import AppKit
 import SwiftUI
 
-/// A macOS scroll view that gives its enclosing editor header first use of a
-/// scroll gesture. Scrolling toward later content collapses the header first;
-/// scrolling back at the visual top expands it before moving the document.
-struct HeaderPriorityScrollView<Content: View>: NSViewRepresentable {
+/// A native SwiftUI scroll view whose first vertical wheel gesture is offered
+/// to the enclosing page header. The document itself remains a standard
+/// `ScrollView`, so momentum, rubber-banding and layout use SwiftUI's normal
+/// macOS behavior.
+struct HeaderPriorityScrollView<Content: View>: View {
     @Binding var isHeaderCollapsed: Bool
     let resetKey: String
-    let content: Content
+    let continuesScrollingAfterHeaderExpansion: Bool
+    @ViewBuilder let content: () -> Content
 
     init(
         isHeaderCollapsed: Binding<Bool>,
         resetKey: String,
-        @ViewBuilder content: () -> Content
+        continuesScrollingAfterHeaderExpansion: Bool = false,
+        @ViewBuilder content: @escaping () -> Content
     ) {
         _isHeaderCollapsed = isHeaderCollapsed
         self.resetKey = resetKey
-        self.content = content()
+        self.continuesScrollingAfterHeaderExpansion = continuesScrollingAfterHeaderExpansion
+        self.content = content
     }
+
+    var body: some View {
+        ScrollView(.vertical) {
+            content()
+                .frame(maxWidth: .infinity, alignment: .topLeading)
+                // Keep the monitor inside the scroll document so its nearest
+                // enclosing NSScrollView is always this vertical editor, not
+                // a nested horizontal frame strip or an unrelated sidebar.
+                .background {
+                    HeaderScrollGestureMonitor(
+                        isHeaderCollapsed: $isHeaderCollapsed,
+                        continuesScrollingAfterHeaderExpansion: continuesScrollingAfterHeaderExpansion
+                    )
+                }
+        }
+        // Rebuilding only the native scroll container resets a newly selected
+        // action/configuration to its real top without disturbing page state.
+        .id(resetKey)
+    }
+}
+
+private struct HeaderScrollGestureMonitor: NSViewRepresentable {
+    @Binding var isHeaderCollapsed: Bool
+    let continuesScrollingAfterHeaderExpansion: Bool
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(parent: self)
+        Coordinator(
+            isHeaderCollapsed: $isHeaderCollapsed,
+            continuesScrollingAfterHeaderExpansion: continuesScrollingAfterHeaderExpansion
+        )
     }
 
-    func makeNSView(context: Context) -> HeaderPriorityNSScrollView {
-        let scrollView = HeaderPriorityNSScrollView()
-        let hostingView = NSHostingView(rootView: AnyView(content))
-        scrollView.hostingView = hostingView
-        scrollView.documentView = hostingView
-        configure(scrollView, coordinator: context.coordinator)
-        return scrollView
+    func makeNSView(context: Context) -> PassthroughMonitorView {
+        let view = PassthroughMonitorView()
+        context.coordinator.install(for: view)
+        return view
     }
 
-    func updateNSView(_ scrollView: HeaderPriorityNSScrollView, context: Context) {
-        context.coordinator.parent = self
-        scrollView.hostingView?.rootView = AnyView(content)
-        configure(scrollView, coordinator: context.coordinator)
-        scrollView.refreshDocumentLayout()
-
-        if scrollView.lastResetKey != resetKey {
-            scrollView.lastResetKey = resetKey
-            DispatchQueue.main.async {
-                scrollView.scrollToVisualTop()
-            }
-        }
+    func updateNSView(_ view: PassthroughMonitorView, context: Context) {
+        context.coordinator.isHeaderCollapsed = $isHeaderCollapsed
+        context.coordinator.continuesScrollingAfterHeaderExpansion = continuesScrollingAfterHeaderExpansion
+        context.coordinator.monitoredView = view
+        context.coordinator.verticalScrollView = view.enclosingScrollView
     }
 
-    private func configure(_ scrollView: HeaderPriorityNSScrollView, coordinator: Coordinator) {
-        scrollView.isHeaderCollapsed = { [weak coordinator] in
-            coordinator?.parent.isHeaderCollapsed ?? false
-        }
-        scrollView.setHeaderCollapsed = { [weak coordinator] collapsed in
-            guard let coordinator, coordinator.parent.isHeaderCollapsed != collapsed else { return }
-            withAnimation(.easeInOut(duration: 0.18)) {
-                coordinator.parent.isHeaderCollapsed = collapsed
-            }
-        }
+    static func dismantleNSView(_ view: PassthroughMonitorView, coordinator: Coordinator) {
+        coordinator.uninstall()
     }
 
     final class Coordinator {
-        var parent: HeaderPriorityScrollView
+        var isHeaderCollapsed: Binding<Bool>
+        var continuesScrollingAfterHeaderExpansion: Bool
+        weak var monitoredView: NSView?
+        weak var verticalScrollView: NSScrollView?
+        private var eventMonitor: Any?
 
-        init(parent: HeaderPriorityScrollView) {
-            self.parent = parent
+        init(
+            isHeaderCollapsed: Binding<Bool>,
+            continuesScrollingAfterHeaderExpansion: Bool
+        ) {
+            self.isHeaderCollapsed = isHeaderCollapsed
+            self.continuesScrollingAfterHeaderExpansion = continuesScrollingAfterHeaderExpansion
+        }
+
+        func install(for view: NSView) {
+            monitoredView = view
+            eventMonitor = NSEvent.addLocalMonitorForEvents(matching: .scrollWheel) { [weak self] event in
+                guard let self,
+                      let view = self.monitoredView,
+                      event.window === view.window,
+                      view.bounds.contains(view.convert(event.locationInWindow, from: nil)) else {
+                    return event
+                }
+
+                let delta = event.scrollingDeltaY
+                guard abs(delta) > 0.001 else { return event }
+
+                // A horizontal frame strip and controls such as sliders can
+                // otherwise swallow a vertical wheel event while hovered.
+                // Keep clearly-horizontal gestures with the child control,
+                // but always send vertical motion to this editor's outer
+                // native scroll view.
+                guard abs(delta) >= abs(event.scrollingDeltaX) else {
+                    return event
+                }
+
+                if delta < 0, !self.isHeaderCollapsed.wrappedValue {
+                    self.setCollapsed(true)
+                    return nil
+                }
+
+                if delta > 0, self.isHeaderCollapsed.wrappedValue {
+                    self.setCollapsed(false)
+                    if self.continuesScrollingAfterHeaderExpansion,
+                       let verticalScrollView = self.verticalScrollView ?? view.enclosingScrollView {
+                        self.verticalScrollView = verticalScrollView
+                        verticalScrollView.scrollWheel(with: event)
+                    }
+                    return nil
+                }
+
+                let verticalScrollView = self.verticalScrollView ?? view.enclosingScrollView
+                self.verticalScrollView = verticalScrollView
+                if let verticalScrollView,
+                   self.requiresVerticalRerouting(event, to: verticalScrollView) {
+                    verticalScrollView.scrollWheel(with: event)
+                    return nil
+                }
+
+                return event
+            }
+        }
+
+        func uninstall() {
+            if let eventMonitor {
+                NSEvent.removeMonitor(eventMonitor)
+                self.eventMonitor = nil
+            }
+        }
+
+        deinit {
+            uninstall()
+        }
+
+        private func setCollapsed(_ collapsed: Bool) {
+            withAnimation(.easeInOut(duration: 0.18)) {
+                isHeaderCollapsed.wrappedValue = collapsed
+            }
+        }
+
+        /// Let the outer NSScrollView receive normal events through AppKit's
+        /// native dispatch path (including event coalescing and momentum).
+        /// Reroute only when a child control or nested horizontal scroll view
+        /// would otherwise consume a vertical gesture.
+        private func requiresVerticalRerouting(
+            _ event: NSEvent,
+            to verticalScrollView: NSScrollView
+        ) -> Bool {
+            guard let windowContent = event.window?.contentView else { return false }
+            let point = windowContent.convert(event.locationInWindow, from: nil)
+            guard let hitView = windowContent.hitTest(point) else { return false }
+
+            if let nestedScrollView = hitView.enclosingScrollView,
+               nestedScrollView !== verticalScrollView {
+                return true
+            }
+
+            var candidate: NSView? = hitView
+            while let current = candidate, current !== verticalScrollView {
+                if current is NSControl { return true }
+                if current === verticalScrollView.documentView { break }
+                candidate = current.superview
+            }
+            return false
         }
     }
 }
 
-final class HeaderPriorityNSScrollView: NSScrollView {
-    var hostingView: NSHostingView<AnyView>?
-    var isHeaderCollapsed: (() -> Bool)?
-    var setHeaderCollapsed: ((Bool) -> Void)?
-    var lastResetKey = ""
-    private var isRefreshingDocumentLayout = false
-
-    override init(frame frameRect: NSRect) {
-        super.init(frame: frameRect)
-        drawsBackground = false
-        borderType = .noBorder
-        hasVerticalScroller = true
-        hasHorizontalScroller = false
-        autohidesScrollers = true
-        automaticallyAdjustsContentInsets = false
-    }
-
-    required init?(coder: NSCoder) {
-        super.init(coder: coder)
-        drawsBackground = false
-        borderType = .noBorder
-        hasVerticalScroller = true
-        hasHorizontalScroller = false
-        autohidesScrollers = true
-        automaticallyAdjustsContentInsets = false
-    }
-
-    override func layout() {
-        super.layout()
-        refreshDocumentLayout()
-    }
-
-    func refreshDocumentLayout() {
-        guard let hostingView, !isRefreshingDocumentLayout else { return }
-        isRefreshingDocumentLayout = true
-        defer { isRefreshingDocumentLayout = false }
-        let width = max(1, contentSize.width)
-        hostingView.setFrameSize(NSSize(width: width, height: max(1, hostingView.frame.height)))
-        hostingView.layoutSubtreeIfNeeded()
-        let height = max(contentSize.height, ceil(hostingView.fittingSize.height))
-        hostingView.frame = NSRect(x: 0, y: 0, width: width, height: height)
-    }
-
-    func scrollToVisualTop() {
-        guard let documentView else { return }
-        let originY: CGFloat
-        if documentView.isFlipped {
-            originY = 0
-        } else {
-            originY = max(0, documentView.bounds.height - contentView.bounds.height)
-        }
-        contentView.scroll(to: NSPoint(x: 0, y: originY))
-        reflectScrolledClipView(contentView)
-    }
-
-    override func scrollWheel(with event: NSEvent) {
-        let delta = event.scrollingDeltaY
-        guard abs(delta) > 0.001 else {
-            super.scrollWheel(with: event)
-            return
-        }
-
-        // In AppKit, a negative vertical delta advances toward later content.
-        if delta < 0, isHeaderCollapsed?() == false {
-            setHeaderCollapsed?(true)
-            return
-        }
-
-        if delta > 0, isHeaderCollapsed?() == true, isAtVisualTop {
-            setHeaderCollapsed?(false)
-            return
-        }
-
-        super.scrollWheel(with: event)
-    }
-
-    private var isAtVisualTop: Bool {
-        guard let documentView else { return true }
-        if documentView.isFlipped {
-            return contentView.bounds.minY <= 0.5
-        }
-        return contentView.bounds.maxY >= documentView.bounds.maxY - 0.5
-    }
+private final class PassthroughMonitorView: NSView {
+    override func hitTest(_ point: NSPoint) -> NSView? { nil }
 }

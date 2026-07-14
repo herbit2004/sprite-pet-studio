@@ -20,6 +20,9 @@ cp "$ROOT/Config/Info.plist" "$APP/Contents/Info.plist"
 cp "$BIN_DIR/SpritePetStudio" "$APP/Contents/MacOS/SpritePetStudio"
 cp "$BIN_DIR/spritepetctl" "$APP/Contents/MacOS/spritepetctl"
 
+# Keep the Finder/Dock icon at the standard top-level app resource location.
+cp "$ROOT/Sources/SpritePetStudio/Resources/AppIcon.icns" "$APP/Contents/Resources/AppIcon.icns"
+
 RESOURCE_BUNDLE="$BIN_DIR/SpritePetStudio_SpritePetStudio.bundle"
 if [[ -d "$RESOURCE_BUNDLE" ]]; then
     ditto "$RESOURCE_BUNDLE" "$APP/Contents/Resources/SpritePetStudio_SpritePetStudio.bundle"

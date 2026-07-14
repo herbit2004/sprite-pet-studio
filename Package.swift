@@ -15,7 +15,8 @@ let package = Package(
         .executableTarget(
             name: "SpritePetStudio",
             resources: [
-                .copy("Resources/BuiltinProjects")
+                .copy("Resources/BuiltinProjects"),
+                .copy("Resources/AppIcon.icns")
             ]
         ),
         .executableTarget(name: "SpritePetCtl")

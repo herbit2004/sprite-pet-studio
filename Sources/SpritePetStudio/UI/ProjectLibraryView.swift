@@ -85,36 +85,12 @@ struct ProjectLibraryView: View {
     }
 
     private func actionEditorSubpage(project: PetProjectDefinition) -> some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack {
-                Button {
-                    editingProjectID = nil
-                } label: {
-                    Label("返回工程库", systemImage: "chevron.left")
-                }
-                .buttonStyle(.bordered)
-                Divider().frame(height: 22)
-                Text(project.name)
-                    .font(.headline)
-                StudioPill(
-                    text: project.showsOnDesktop ? "桌面显示中" : "未显示",
-                    color: project.showsOnDesktop ? .green : .secondary
-                )
-                Button {
-                    projectPendingNormalization = project
-                } label: {
-                    Label(
-                        "一键归一化全部帧",
-                        systemImage: "square.stack.3d.down.right"
-                    )
-                }
-                .disabled(model.draftTransformCount(projectID: project.id) == 0)
-                Spacer()
-            }
-            .padding(.horizontal, StudioTheme.pagePadding)
-            .padding(.top, StudioTheme.pagePadding)
-            ActionLibraryView(model: model)
-        }
+        ActionLibraryView(
+            model: model,
+            editedProject: project,
+            onBackToProjectLibrary: { editingProjectID = nil },
+            onRequestNormalization: { projectPendingNormalization = $0 }
+        )
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
 

@@ -3,18 +3,34 @@ import SwiftUI
 
 struct ActionLibraryView: View {
     @ObservedObject var model: AppModel
+    /// When this editor is opened from a project card, its navigation controls
+    /// live in the same collapsing page header as the action editor itself.
+    /// Keeping them together prevents the editor from sliding underneath a
+    /// second, independently-laid-out toolbar.
+    let editedProject: PetProjectDefinition?
+    let onBackToProjectLibrary: (() -> Void)?
+    let onRequestNormalization: ((PetProjectDefinition) -> Void)?
     @State private var selectedActionID: String?
     @State private var isHeaderCollapsed = false
 
+    init(
+        model: AppModel,
+        editedProject: PetProjectDefinition? = nil,
+        onBackToProjectLibrary: (() -> Void)? = nil,
+        onRequestNormalization: ((PetProjectDefinition) -> Void)? = nil
+    ) {
+        self.model = model
+        self.editedProject = editedProject
+        self.onBackToProjectLibrary = onBackToProjectLibrary
+        self.onRequestNormalization = onRequestNormalization
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: StudioTheme.pageSpacing) {
-            StudioCollapsiblePageHeader(
-                eyebrow: "Animation Library",
-                title: "动作编辑",
-                subtitle: "逐帧调整当前工程的图片、播放方式和触发规则。动作结构来自工程采用的配置。",
-                isCollapsed: isHeaderCollapsed
-            )
+        VStack(alignment: .leading, spacing: 0) {
+            actionPageHeader
             .padding(.horizontal, StudioTheme.pagePadding)
+            .padding(.top, StudioTheme.pagePadding)
+            .padding(.bottom, StudioTheme.pageSpacing)
 
             HStack(alignment: .top, spacing: 18) {
                 StudioCard {
@@ -74,8 +90,9 @@ struct ActionLibraryView: View {
                         )
                     }
                 }
-                .frame(maxWidth: .infinity)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .groupBoxStyle(StudioGroupBoxStyle())
@@ -88,6 +105,72 @@ struct ActionLibraryView: View {
             selectedActionID = model.currentProject?.actions.first?.id
             isHeaderCollapsed = false
         }
+    }
+
+    @ViewBuilder
+    private var actionPageHeader: some View {
+        if let editedProject {
+            if isHeaderCollapsed {
+                projectNavigationRow(for: editedProject, includesEditorTitle: true)
+                    .frame(minHeight: 42)
+            } else {
+                VStack(alignment: .leading, spacing: 12) {
+                    projectNavigationRow(for: editedProject, includesEditorTitle: false)
+                    StudioPageHeader(
+                        eyebrow: "Animation Library",
+                        title: "动作编辑",
+                        subtitle: "逐帧调整当前工程的图片、播放方式和触发规则。动作结构来自工程采用的配置。"
+                    )
+                }
+            }
+        } else {
+            StudioCollapsiblePageHeader(
+                eyebrow: "Animation Library",
+                title: "动作编辑",
+                subtitle: "逐帧调整当前工程的图片、播放方式和触发规则。动作结构来自工程采用的配置。",
+                isCollapsed: isHeaderCollapsed
+            )
+        }
+    }
+
+    private func projectNavigationRow(
+        for project: PetProjectDefinition,
+        includesEditorTitle: Bool
+    ) -> some View {
+        HStack(spacing: 10) {
+            Button {
+                onBackToProjectLibrary?()
+            } label: {
+                Label("返回工程库", systemImage: "chevron.left")
+            }
+            .buttonStyle(.bordered)
+
+            Divider().frame(height: 22)
+
+            Text(project.name)
+                .font(.headline)
+                .lineLimit(1)
+            StudioPill(
+                text: project.showsOnDesktop ? "桌面显示中" : "未显示",
+                color: project.showsOnDesktop ? .green : .secondary
+            )
+
+            if includesEditorTitle {
+                Divider().frame(height: 22)
+                Text("动作编辑")
+                    .font(.title3.bold())
+            }
+
+            Spacer(minLength: 8)
+
+            Button {
+                onRequestNormalization?(project)
+            } label: {
+                Label("一键归一化全部帧", systemImage: "square.stack.3d.down.right")
+            }
+            .disabled(model.draftTransformCount(projectID: project.id) == 0)
+        }
+        .animation(.easeInOut(duration: 0.18), value: isHeaderCollapsed)
     }
 }
 
@@ -105,9 +188,10 @@ private struct ActionEditorView: View {
     var body: some View {
         HeaderPriorityScrollView(
             isHeaderCollapsed: $isHeaderCollapsed,
-            resetKey: action.id
+            resetKey: action.id,
+            continuesScrollingAfterHeaderExpansion: true
         ) {
-            VStack(alignment: .leading, spacing: 14) {
+            LazyVStack(alignment: .leading, spacing: 14) {
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(layout?.name ?? action.name)
@@ -127,10 +211,13 @@ private struct ActionEditorView: View {
                 frameEditor
                 triggersEditor
             }
+            .padding(.top, 8)
             .padding(.leading, 6)
             .padding(.trailing, StudioTheme.pagePadding)
             .padding(.bottom, StudioTheme.pagePadding)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .clipped()
         .onAppear { selectAValidFrame() }
         .onChange(of: action.id) { _, _ in
             isHeaderCollapsed = false
@@ -216,7 +303,7 @@ private struct ActionEditorView: View {
                     .foregroundStyle(.secondary)
 
                 ScrollView(.horizontal) {
-                    HStack(spacing: 8) {
+                    LazyHStack(spacing: 8) {
                         ForEach(Array(action.frames.enumerated()), id: \.element.id) { index, frame in
                             FrameThumbnail(
                                 index: index,
@@ -561,27 +648,26 @@ private struct FrameCanvas: View {
 }
 
 private struct CheckerboardView: View {
-    var body: some View {
-        Canvas { context, size in
-            let square: CGFloat = 10
-            let horizontalCount = Int(ceil(size.width / square))
-            let verticalCount = Int(ceil(size.height / square))
-            for verticalIndex in 0..<verticalCount {
-                for horizontalIndex in 0..<horizontalCount {
-                    let color = (verticalIndex + horizontalIndex).isMultiple(of: 2)
-                        ? Color(nsColor: .windowBackgroundColor)
-                        : Color.secondary.opacity(0.12)
-                    context.fill(
-                        Path(CGRect(
-                            x: CGFloat(horizontalIndex) * square,
-                            y: CGFloat(verticalIndex) * square,
-                            width: square,
-                            height: square
-                        )),
-                        with: .color(color)
-                    )
-                }
-            }
+    private static let tileImage: Image = {
+        let square: CGFloat = 10
+        let tileSize = NSSize(width: square * 2, height: square * 2)
+        let image = NSImage(size: tileSize, flipped: false) { bounds in
+            NSColor.windowBackgroundColor.setFill()
+            NSBezierPath(rect: bounds).fill()
+
+            NSColor.secondaryLabelColor.withAlphaComponent(0.12).setFill()
+            NSBezierPath(rect: NSRect(x: 0, y: 0, width: square, height: square)).fill()
+            NSBezierPath(rect: NSRect(x: square, y: square, width: square, height: square)).fill()
+            return true
         }
+        image.cacheMode = .always
+        return Image(nsImage: image)
+    }()
+
+    var body: some View {
+        Rectangle()
+            .fill(
+                ImagePaint(image: Self.tileImage, scale: 1)
+            )
     }
 }

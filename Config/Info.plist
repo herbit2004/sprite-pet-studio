@@ -12,6 +12,8 @@
     <string>com.herbit.sprite-pet-studio</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
     <key>CFBundleName</key>
     <string>SpritePetStudio</string>
     <key>CFBundlePackageType</key>
