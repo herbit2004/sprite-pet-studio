@@ -130,8 +130,54 @@ a {
   color: var(--ink);
 }
 
-.header-action {
+.header-controls {
   justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.language-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid rgba(16, 19, 17, 0.11);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.58);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.7) inset;
+  transition: background 180ms ease, border-color 180ms ease, transform 180ms ease;
+}
+
+.language-toggle svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.35;
+}
+
+.language-toggle:hover {
+  border-color: rgba(16, 19, 17, 0.2);
+  background: #fff;
+  transform: translateY(-1px);
+}
+
+.language-toggle:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 3px;
+}
+
+.header-action {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -1033,7 +1079,7 @@ a {
   color: rgba(245, 255, 251, 0.78);
 }
 
-.download-section p span:not(:empty)::before { content: " · "; }
+.download-section p [data-size]:not(:empty)::before { content: " · "; }
 
 .download-glow {
   position: absolute;
@@ -1123,6 +1169,8 @@ a {
   .site-header { min-height: 66px; padding: 10px 16px; }
   .brand span { font-size: 13px; }
   .brand img { width: 34px; height: 34px; }
+  .header-controls { gap: 8px; }
+  .language-toggle { min-height: 38px; padding-inline: 11px; font-size: 12px; }
   .header-action { font-size: 12px; }
   .hero { gap: 20px; min-height: auto; padding-block: 68px 80px; }
   .hero h1 { font-size: clamp(50px, 15vw, 72px); }
@@ -1166,6 +1214,13 @@ a {
   .site-footer { grid-template-columns: 1fr; justify-items: start; }
   .site-footer p { text-align: left; }
   .site-footer > div { justify-self: start; flex-wrap: wrap; }
+}
+
+@media (max-width: 420px) {
+  .site-header .brand span { display: none; }
+  .header-controls { gap: 6px; }
+  .language-toggle { padding-inline: 10px; }
+  .header-action { gap: 4px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
