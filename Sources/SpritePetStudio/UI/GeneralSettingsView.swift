@@ -66,6 +66,7 @@ struct GeneralSettingsView: View {
                     }
                 }
             }
+            .padding(StudioTheme.pagePadding)
         }
     }
 }

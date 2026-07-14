@@ -80,6 +80,7 @@ struct ProjectLibraryView: View {
                     }
                 }
             }
+            .padding(StudioTheme.pagePadding)
         }
     }
 
@@ -110,6 +111,8 @@ struct ProjectLibraryView: View {
                 .disabled(model.draftTransformCount(projectID: project.id) == 0)
                 Spacer()
             }
+            .padding(.horizontal, StudioTheme.pagePadding)
+            .padding(.top, StudioTheme.pagePadding)
             ActionLibraryView(model: model)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)

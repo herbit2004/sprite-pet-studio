@@ -7,7 +7,6 @@ enum StudioTheme {
     static let pageSpacing: CGFloat = 18
     static let pagePadding: CGFloat = 24
 }
-
 struct StudioPageHeader<Trailing: View>: View {
     let eyebrow: String
     let title: String
@@ -60,14 +59,15 @@ struct StudioCard<Content: View>: View {
             .padding(16)
             .background(
                 RoundedRectangle(cornerRadius: StudioTheme.cardRadius, style: .continuous)
-                    .fill(.background.opacity(0.66))
-                    .shadow(color: .black.opacity(0.035), radius: 12, y: 4)
+                    .fill(.background.opacity(0.86))
+                    .shadow(color: .black.opacity(0.06), radius: 14, y: 5)
             )
             .overlay {
-                if isSelected {
-                    RoundedRectangle(cornerRadius: StudioTheme.cardRadius, style: .continuous)
-                        .stroke(StudioTheme.accent, lineWidth: 1.5)
-                }
+                RoundedRectangle(cornerRadius: StudioTheme.cardRadius, style: .continuous)
+                    .stroke(
+                        isSelected ? StudioTheme.accent : Color.secondary.opacity(0.13),
+                        lineWidth: isSelected ? 2 : 1
+                    )
             }
     }
 }
@@ -123,7 +123,11 @@ struct StudioGroupBoxStyle: GroupBoxStyle {
         .padding(14)
         .background(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(.background.opacity(0.58))
+                .fill(.background.opacity(0.84))
         )
+        .overlay {
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(Color.secondary.opacity(0.12))
+        }
     }
 }

@@ -47,6 +47,7 @@ struct EventCatalogView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
+            .padding(StudioTheme.pagePadding)
         }
     }
 

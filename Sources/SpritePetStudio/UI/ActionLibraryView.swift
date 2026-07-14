@@ -6,53 +6,70 @@ struct ActionLibraryView: View {
     @State private var selectedActionID: String?
 
     var body: some View {
-        HStack(alignment: .top, spacing: 0) {
-            actionList
-                .frame(width: 240, alignment: .top)
-                .frame(maxHeight: .infinity, alignment: .top)
-                .padding(.trailing, 22)
-                .overlay(alignment: .trailing) {
-                    Rectangle()
-                        .fill(Color.secondary.opacity(0.14))
-                        .frame(width: 1)
-                }
+        VStack(alignment: .leading, spacing: StudioTheme.pageSpacing) {
+            StudioPageHeader(
+                eyebrow: "Animation Library",
+                title: "动作编辑",
+                subtitle: "逐帧调整当前工程的图片、播放方式和触发规则。动作结构来自工程采用的配置。"
+            )
+            .padding(.horizontal, StudioTheme.pagePadding)
 
-            ScrollViewReader { proxy in
-                ScrollView {
-                    VStack(alignment: .leading, spacing: StudioTheme.pageSpacing) {
-                        Color.clear
-                            .frame(height: 1)
-                            .id("action-editor-top")
-
-                        StudioPageHeader(
-                            eyebrow: "Animation Library",
-                            title: "动作编辑",
-                            subtitle: "逐帧调整当前工程的图片、播放方式和触发规则。动作结构来自工程采用的配置。"
-                        )
-
-                        if let selectedActionID,
-                           let action = model.bindingForAction(id: selectedActionID),
-                           let project = model.currentProject {
-                            ActionEditorView(model: model, action: action, project: project)
-                        } else {
-                            ContentUnavailableView(
-                                "选择一套动作",
-                                systemImage: "photo.on.rectangle.angled",
-                                description: Text("动作和帧按当前工程采用的图集配置排列。")
-                            )
-                            .frame(maxWidth: .infinity, minHeight: 320)
+            HStack(alignment: .top, spacing: 18) {
+                StudioCard {
+                    ScrollView {
+                        LazyVStack(spacing: 6) {
+                            ForEach(model.currentProject?.actions ?? []) { action in
+                                let layout = model.currentProject?.effectiveAtlasConfiguration.actions.first { $0.key == action.id }
+                                Button {
+                                    selectedActionID = action.id
+                                } label: {
+                                    HStack(spacing: 9) {
+                                        Circle()
+                                            .fill(action.isEnabled ? StudioTheme.accent : Color.gray)
+                                            .frame(width: 7, height: 7)
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text(layout?.name ?? action.name)
+                                            Text("\(model.currentProject?.effectiveAtlasConfiguration.rowLabel(for: action.id) ?? "已配置") · \(action.frames.count) 帧")
+                                                .font(.caption2)
+                                                .foregroundStyle(.secondary)
+                                        }
+                                        Spacer()
+                                    }
+                                    .padding(10)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .background(
+                                        selectedActionID == action.id
+                                            ? StudioTheme.accent.opacity(0.12)
+                                            : Color.clear,
+                                        in: RoundedRectangle(cornerRadius: 10)
+                                    )
+                                    .contentShape(Rectangle())
+                                }
+                                .buttonStyle(.plain)
+                            }
                         }
                     }
-                    .padding(.leading, 26)
-                    .padding(.trailing, 6)
-                    .padding(.bottom, StudioTheme.pagePadding)
                 }
-                .scrollContentBackground(.hidden)
-                .onAppear { scrollToTop(proxy) }
-                .onChange(of: selectedActionID) { _, _ in scrollToTop(proxy) }
+                .frame(width: 240)
+                .padding(.leading, StudioTheme.pagePadding)
+
+                Group {
+                    if let selectedActionID,
+                       let action = model.bindingForAction(id: selectedActionID),
+                       let project = model.currentProject {
+                        ActionEditorView(model: model, action: action, project: project)
+                    } else {
+                        ContentUnavailableView(
+                            "选择一套动作",
+                            systemImage: "photo.on.rectangle.angled",
+                            description: Text("动作和帧按当前工程采用的图集配置排列。")
+                        )
+                    }
+                }
+                .frame(maxWidth: .infinity)
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .groupBoxStyle(StudioGroupBoxStyle())
         .onAppear {
             if selectedActionID == nil {
@@ -61,60 +78,6 @@ struct ActionLibraryView: View {
         }
         .onChange(of: model.document.selectedProjectID) { _, _ in
             selectedActionID = model.currentProject?.actions.first?.id
-        }
-    }
-
-    private var actionList: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            VStack(alignment: .leading, spacing: 3) {
-                Text("动作列表")
-                    .font(.headline)
-                Text("按图集固定顺序排列")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-
-            ScrollView {
-                LazyVStack(spacing: 6) {
-                    ForEach(model.currentProject?.actions ?? []) { action in
-                        let layout = model.currentProject?.effectiveAtlasConfiguration.actions.first { $0.key == action.id }
-                        Button {
-                            selectedActionID = action.id
-                        } label: {
-                            HStack(spacing: 9) {
-                                Circle()
-                                    .fill(action.isEnabled ? StudioTheme.accent : Color.gray)
-                                    .frame(width: 7, height: 7)
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(layout?.name ?? action.name)
-                                    Text("\(model.currentProject?.effectiveAtlasConfiguration.rowLabel(for: action.id) ?? "已配置") · \(action.frames.count) 帧")
-                                        .font(.caption2)
-                                        .foregroundStyle(.secondary)
-                                }
-                                Spacer()
-                            }
-                            .padding(10)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(
-                                selectedActionID == action.id
-                                    ? StudioTheme.accent.opacity(0.12)
-                                    : Color.clear,
-                                in: RoundedRectangle(cornerRadius: 10)
-                            )
-                            .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-                .padding(.vertical, 2)
-            }
-            .scrollContentBackground(.hidden)
-        }
-    }
-
-    private func scrollToTop(_ proxy: ScrollViewProxy) {
-        DispatchQueue.main.async {
-            proxy.scrollTo("action-editor-top", anchor: .top)
         }
     }
 }
@@ -130,25 +93,30 @@ private struct ActionEditorView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(layout?.name ?? action.name)
-                        .font(.title2.bold())
-                    Text("配置动作 · \(project.effectiveAtlasConfiguration.rowLabel(for: action.id))")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(layout?.name ?? action.name)
+                            .font(.title2.bold())
+                        Text("配置动作 · \(project.effectiveAtlasConfiguration.rowLabel(for: action.id))")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Toggle("启用", isOn: $action.isEnabled)
+                        .toggleStyle(.switch)
+                    Button("播放整个动作") { model.playAction(id: action.id) }
                 }
-                Spacer()
-                Toggle("启用", isOn: $action.isEnabled)
-                    .toggleStyle(.switch)
-                Button("播放整个动作") { model.playAction(id: action.id) }
-            }
 
-            playbackSettings
-            playbackValidation
-            frameEditor
-            triggersEditor
+                playbackSettings
+                playbackValidation
+                frameEditor
+                triggersEditor
+            }
+            .padding(.leading, 6)
+            .padding(.trailing, StudioTheme.pagePadding)
+            .padding(.bottom, StudioTheme.pagePadding)
         }
         .onAppear { selectAValidFrame() }
         .onChange(of: action.id) { _, _ in selectAValidFrame() }

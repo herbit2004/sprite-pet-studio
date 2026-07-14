@@ -36,7 +36,6 @@ struct SettingsRootView: View {
             ZStack {
                 StudioPageBackground()
                 detail
-                    .padding(StudioTheme.pagePadding)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
