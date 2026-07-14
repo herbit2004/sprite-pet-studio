@@ -134,18 +134,11 @@ private struct ActionEditorView: View {
                     }
                     .labelsHidden()
                 }
-                GridRow {
-                    Text("播放次数")
-                    HStack(spacing: 8) {
+                if action.playback == .once {
+                    GridRow {
+                        Text("播放次数")
                         Stepper("\(action.repeatCount) 次", value: $action.repeatCount, in: 1...99)
-                        if action.playback == .loop {
-                            Text("持续循环时不受此值限制")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
                     }
-                    .disabled(action.playback != .once)
-                    .opacity(action.playback == .once ? 1 : 0.5)
                 }
                 GridRow {
                     Text("基础速度")
