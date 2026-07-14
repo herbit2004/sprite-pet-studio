@@ -1,0 +1,25 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  swift-build:
+    name: Swift build
+    runs-on: macos-15
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6
+
+      - name: Compile app and CLI
+        run: make build

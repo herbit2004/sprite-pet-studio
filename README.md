@@ -1,5 +1,11 @@
 # SpritePet Studio / 桌宠工坊
 
+[![Build](https://github.com/herbit2004/sprite-pet-studio/actions/workflows/ci.yml/badge.svg)](https://github.com/herbit2004/sprite-pet-studio/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/herbit2004/sprite-pet-studio?display_name=tag)](https://github.com/herbit2004/sprite-pet-studio/releases/latest)
+[![GitHub Pages](https://img.shields.io/badge/website-GitHub%20Pages-10a37f)](https://herbit2004.github.io/sprite-pet-studio/)
+
+[产品网站](https://herbit2004.github.io/sprite-pet-studio/) · [下载最新版](https://github.com/herbit2004/sprite-pet-studio/releases/latest/download/SpritePetStudio-macOS.zip) · [查看 Releases](https://github.com/herbit2004/sprite-pet-studio/releases)
+
 一个原生 macOS 桌宠运行器与逐帧图集编辑器。它可以同时在桌面上运行多个独立桌宠；每个工程都有自己的图集、动作库、触发器、窗口位置和显示开关。
 
 内置 `little-naruto` 示例工程，并提供与 Codex v2 宠物图集的互通能力。
@@ -10,7 +16,13 @@
 
 ### 直接安装（发布版）
 
-当本仓库发布 GitHub Release 后，在仓库的 **Releases** 页面下载 `SpritePetStudio.app.zip`，解压后将 `SpritePetStudio.app` 拖入“应用程序（Applications）”文件夹即可。
+在仓库的 **Releases** 页面下载 `SpritePetStudio-macOS.zip`，解压后将 `SpritePetStudio.app` 拖入“应用程序（Applications）”文件夹即可。也可以使用上方“下载最新版”的固定链接；它会始终指向最新正式 Release 的同名附件。
+
+Release 同时提供 `SpritePetStudio-macOS.zip.sha256`。下载后可验证文件完整性：
+
+```bash
+shasum -a 256 -c SpritePetStudio-macOS.zip.sha256
+```
 
 当前本地打包版本使用临时（ad-hoc）签名，适合本机开发与测试。若 macOS 阻止首次打开，可在 Finder 中按住 `Control` 点按 App，选择“打开”。面向其他用户的正式发布应使用 Apple Developer ID 签名并完成公证。
 
@@ -40,6 +52,9 @@ make build
 # 编译 Release 版本并生成 macOS App
 make app
 
+# 生成用于 GitHub Release 的 App ZIP 与 SHA-256 文件
+make release
+
 # 本地打开打包结果
 open dist/SpritePetStudio.app
 
@@ -47,7 +62,19 @@ open dist/SpritePetStudio.app
 make install
 ```
 
-打包产物为 `dist/SpritePetStudio.app`。`make install` 的目标路径是：
+各命令的产物如下：
+
+```text
+make app
+└── dist/SpritePetStudio.app
+
+make release
+├── dist/SpritePetStudio.app
+├── dist/SpritePetStudio-macOS.zip
+└── dist/SpritePetStudio-macOS.zip.sha256
+```
+
+`make install` 的目标路径是：
 
 ```text
 /Applications/SpritePetStudio.app
@@ -64,6 +91,70 @@ make clean
 # 直接用 SwiftPM 运行开发版
 swift run SpritePetStudio
 ```
+
+### 打包脚本做了什么
+
+`make app` 调用 `scripts/build-app.sh`，依次执行：
+
+1. 用 SwiftPM 的 Release 配置编译 `SpritePetStudio` 和 `spritepetctl`；
+2. 创建标准 `.app` Bundle，复制可执行文件、资源包、`Info.plist` 和 App 图标；
+3. 将 `spritepetctl` 一并放入 App 的 `Contents/MacOS`；
+4. 使用 ad-hoc 签名完成本地可运行的 App。
+
+`make release` 再调用 `scripts/package-release.sh`，使用 macOS `ditto` 将整个 App Bundle 压缩为 ZIP，并生成 SHA-256 校验文件。使用 `ditto` 是为了保留 macOS Bundle 的目录和扩展属性；不要在 Finder 中随意重新压缩后替换自动发布附件。
+
+## GitHub Actions 与发布流程
+
+仓库包含三条工作流：
+
+| 工作流 | 文件 | 触发条件 | 结果 |
+| --- | --- | --- | --- |
+| Build | `.github/workflows/ci.yml` | 推送到 `main`、Pull Request、手动触发 | 在 macOS Runner 上执行 `make build` |
+| Release macOS app | `.github/workflows/release.yml` | 推送任意 `v*` Tag、手动触发 | 编译 App，创建或更新 Release，上传 ZIP 和 SHA-256 |
+| Deploy GitHub Pages | `.github/workflows/pages.yml` | `main` 中的 `site/**` 或 Pages 工作流变化、手动触发 | 将 `site/` 部署到 GitHub Pages |
+
+### 发布一个新版本
+
+版本使用语义化 Tag，例如 `v0.1.0`。Tag 必须与 `Config/Info.plist` 中的 `CFBundleShortVersionString` 完全一致，否则 Release 工作流会主动失败，避免版本号与二进制不一致。
+
+```bash
+# 1. 修改 Config/Info.plist 中的版本号并提交到 main
+git add Config/Info.plist
+git commit -m "Bump version to 0.2.0"
+git push origin main
+
+# 2. 在准备发布的 main 提交上创建并推送 Tag
+git tag -a v0.2.0 -m "SpritePet Studio v0.2.0"
+git push origin v0.2.0
+```
+
+推送 Tag 后，Release 工作流自动执行 `make release`，并创建标题为 `SpritePet Studio v0.2.0` 的 GitHub Release。发布说明由 GitHub 根据上一个 Tag 以来的 Pull Request 自动生成，分类规则位于 `.github/release.yml`。
+
+每个正式 Release 发布的是：
+
+- `SpritePetStudio-macOS.zip`：可解压并拖入 Applications 的完整 App；
+- `SpritePetStudio-macOS.zip.sha256`：下载完整性校验文件；
+- GitHub 自动生成的 Source code ZIP/TAR：这是源码快照，不是可安装 App。
+
+如果工作流中断，可以在 GitHub Actions 页面重新运行，或者通过 CLI 指定已经存在的 Tag：
+
+```bash
+gh workflow run release.yml -f tag=v0.2.0
+```
+
+重复运行不会创建重复 Release；工作流会覆盖同名 ZIP 和校验文件。
+
+> 当前自动产物使用 ad-hoc 签名，适合开源测试分发。若要让其他 Mac 无警告安装，需要配置 Apple Developer ID 证书、签名 Secret 和 Apple 公证步骤。
+
+### GitHub Pages
+
+产品网站源码位于 `site/`，不依赖 Node.js 或外部构建工具。合并到 `main` 后，Pages 工作流会把该目录作为静态站点发布到：
+
+```text
+https://herbit2004.github.io/sprite-pet-studio/
+```
+
+页面中的下载按钮先使用稳定的 `releases/latest/download/SpritePetStudio-macOS.zip` 地址，并通过 GitHub Releases API 补充最新版本号和文件大小。即使 API 暂时不可用，下载链接仍然有效。
 
 ## 工程结构
 
@@ -84,7 +175,12 @@ sprite-pet-studio/
 │   └── SpritePetCtl/                     # spritepetctl 命令行事件触发工具
 ├── scripts/
 │   ├── build-app.sh                      # Release 构建、装配 App、临时签名
+│   ├── package-release.sh                # 生成 Release ZIP 和 SHA-256
 │   └── install-local.sh                  # 打包后复制到 /Applications
+├── site/                                 # GitHub Pages 静态产品网站
+├── .github/
+│   ├── workflows/                        # CI、Release 与 Pages 工作流
+│   └── release.yml                       # 自动 Release Notes 分类
 ├── docs/
 │   ├── PROJECT_FORMAT.md                 # 图集、配置库和工程格式
 │   └── DESIGN_SYSTEM.md                  # 设置窗口的 UI 设计规范
