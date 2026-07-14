@@ -52,6 +52,7 @@ struct ActionLibraryView: View {
                 }
                 .frame(width: 240)
                 .padding(.leading, StudioTheme.pagePadding)
+                .padding(.bottom, StudioTheme.pagePadding)
 
                 Group {
                     if let selectedActionID,

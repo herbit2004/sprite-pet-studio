@@ -68,11 +68,11 @@ struct SettingsRootView: View {
         } label: {
             Label(item.title, systemImage: item.icon)
                 .font(.callout.weight(destination == item ? .semibold : .regular))
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
                 .foregroundStyle(destination == item ? StudioTheme.accent : Color.primary)
+                .frame(minWidth: 112, minHeight: 36)
+                .contentShape(Capsule())
                 .background(
-                    destination == item ? StudioTheme.accent.opacity(0.12) : Color.clear,
+                    destination == item ? StudioTheme.accent.opacity(0.14) : Color.secondary.opacity(0.075),
                     in: Capsule()
                 )
         }

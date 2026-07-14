@@ -37,6 +37,7 @@ struct ConfigurationLibraryView: View {
                 configurationList
                     .frame(width: 260)
                     .padding(.leading, StudioTheme.pagePadding)
+                    .padding(.bottom, StudioTheme.pagePadding)
 
                 if let draft {
                     ConfigurationDetailEditor(
