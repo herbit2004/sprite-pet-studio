@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#090b0a" />
+    <meta
+      name="description"
+      content="SpritePet Studio 是一款原生 macOS 桌宠运行器与可交互图集编辑器。"
+    />
+    <meta property="og:title" content="SpritePet Studio · 桌宠工坊" />
+    <meta
+      property="og:description"
+      content="把角色图集、动作和系统事件，组装成真正生活在桌面上的小伙伴。"
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="assets/app-icon.png" />
+    <title>SpritePet Studio · 桌宠工坊</title>
+    <link rel="icon" href="assets/app-icon.png" />
+    <link rel="stylesheet" href="styles.css" />
+    <noscript><style>.reveal { opacity: 1; transform: none; }</style></noscript>
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <div class="ambient ambient-one" aria-hidden="true"></div>
+    <div class="ambient ambient-two" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <a class="brand" href="#top" aria-label="回到首页">
+        <img src="assets/app-icon.png" alt="" />
+        <span>SpritePet Studio</span>
+      </a>
+      <nav aria-label="主导航">
+        <a href="#features">能力</a>
+        <a href="#workflow">工作流</a>
+        <a href="#format">工程格式</a>
+      </nav>
+      <a
+        class="header-action"
+        href="https://github.com/herbit2004/sprite-pet-studio"
+        target="_blank"
+        rel="noreferrer"
+      >
+        GitHub
+        <span aria-hidden="true">↗</span>
+      </a>
+    </header>
+
+    <main id="top">
+      <section class="hero shell">
+        <div class="hero-copy reveal">
+          <div class="eyebrow">
+            <span class="status-dot"></span>
+            原生 macOS · 开源桌宠工作台
+          </div>
+          <h1>让角色真正<br /><em>活在桌面上。</em></h1>
+          <p class="hero-lede">
+            从一张完整图集出发，编辑每一帧、组合任意动作、绑定鼠标与系统事件。
+            一个工程是一只桌宠，也是一套完整的性格。
+          </p>
+          <div class="hero-actions">
+            <a
+              class="button button-primary"
+              data-release-download
+              href="https://github.com/herbit2004/sprite-pet-studio/releases/latest/download/SpritePetStudio-macOS.zip"
+            >
+              <span>下载 macOS 版</span>
+              <span aria-hidden="true">↓</span>
+            </a>
+            <a
+              class="button button-secondary"
+              href="https://github.com/herbit2004/sprite-pet-studio"
+              target="_blank"
+              rel="noreferrer"
+            >
+              查看源码
+              <span aria-hidden="true">↗</span>
+            </a>
+          </div>
+          <div class="hero-meta" aria-label="应用信息">
+            <div>
+              <strong data-version>v0.1.0</strong>
+              <span>最新版本</span>
+            </div>
+            <div>
+              <strong>macOS 14+</strong>
+              <span>系统要求</span>
+            </div>
+            <div>
+              <strong>SwiftUI</strong>
+              <span>原生构建</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-product reveal" data-delay="1">
+          <div class="orbit orbit-one" aria-hidden="true"></div>
+          <div class="orbit orbit-two" aria-hidden="true"></div>
+          <div class="app-window">
+            <div class="window-bar">
+              <div class="traffic-lights" aria-hidden="true">
+                <i></i><i></i><i></i>
+              </div>
+              <span>桌宠工坊设置</span>
+              <span class="window-state">Live</span>
+            </div>
+            <div class="window-body">
+              <aside class="mock-sidebar" aria-hidden="true">
+                <div class="mock-brand"></div>
+                <div class="mock-nav active"></div>
+                <div class="mock-nav"></div>
+                <div class="mock-nav short"></div>
+                <div class="mock-spacer"></div>
+                <div class="mock-profile"></div>
+              </aside>
+              <div class="mock-content">
+                <div class="mock-heading">
+                  <span>工程库</span>
+                  <i></i>
+                </div>
+                <div class="pet-stage">
+                  <div class="stage-grid" aria-hidden="true"></div>
+                  <span class="event-chip event-chip-one">mouse · near</span>
+                  <span class="event-chip event-chip-two">action · idle</span>
+                  <img src="assets/naruto-idle.png" alt="小鸣人桌宠预览" />
+                  <div class="stage-shadow" aria-hidden="true"></div>
+                </div>
+                <div class="mock-timeline" aria-label="动作帧预览">
+                  <div class="timeline-label">
+                    <span>running</span>
+                    <small>6 frames</small>
+                  </div>
+                  <div class="frames" aria-hidden="true">
+                    <i class="selected"></i><i></i><i></i><i></i><i></i><i></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="floating-card floating-event">
+            <span class="floating-icon">⌁</span>
+            <div><small>事件接口</small><strong>鼠标靠近</strong></div>
+            <i></i>
+          </div>
+          <div class="floating-card floating-frame">
+            <span class="frame-number">08</span>
+            <div><small>图集格位</small><strong>已归一化</strong></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="trust-strip shell reveal" aria-label="核心技术">
+        <span>Swift 5.10</span>
+        <i></i>
+        <span>SpriteKit</span>
+        <i></i>
+        <span>Codex v2 图集</span>
+        <i></i>
+        <span>30 / 60 / 120 FPS</span>
+        <i></i>
+        <span>MIT License</span>
+      </section>
+
+      <section class="section shell" id="features">
+        <div class="section-heading reveal">
+          <span class="section-index">01 / 能力</span>
+          <h2>一套框架，容纳<br />每一种角色性格。</h2>
+          <p>运行、编辑和事件编排在同一个原生应用里完成。</p>
+        </div>
+
+        <div class="bento-grid">
+          <article class="bento bento-large reveal">
+            <div class="card-kicker">Frame editor</div>
+            <h3>把每一帧调到<br />刚刚好的位置。</h3>
+            <p>单帧预览、PNG 导入导出、相对缩放、X/Y 位移与时长调整，最后一键归一化回整张图集。</p>
+            <div class="frame-lab" aria-hidden="true">
+              <div class="frame-preview">
+                <div class="checker"></div>
+                <img src="assets/naruto-idle.png" alt="" />
+                <span>Frame 01</span>
+              </div>
+              <div class="frame-controls">
+                <div><span>Scale</span><b>100%</b></div>
+                <div class="control-line"><i></i></div>
+                <div class="axis"><span>X&nbsp; 0 px</span><span>Y&nbsp; 0 px</span></div>
+                <span class="fake-button">Normalize</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="bento bento-dark reveal" data-delay="1">
+            <div class="card-kicker">Event engine</div>
+            <h3>让动作有触发的理由。</h3>
+            <p>鼠标距离、点击、拖动、空闲、随机、定时与系统事件，都可以成为一套动作的开场。</p>
+            <div class="signal-map" aria-hidden="true">
+              <span class="signal-core">PET</span>
+              <span class="signal-node node-a">mouse</span>
+              <span class="signal-node node-b">idle</span>
+              <span class="signal-node node-c">system</span>
+              <svg viewBox="0 0 320 190" preserveAspectRatio="none">
+                <path d="M160 95 C110 65 92 34 52 28" />
+                <path d="M160 95 C214 72 246 45 276 37" />
+                <path d="M160 95 C178 132 213 154 255 163" />
+              </svg>
+            </div>
+          </article>
+
+          <article class="bento reveal">
+            <div class="card-kicker">Multi-project</div>
+            <h3>一只、两只，或者整支小队。</h3>
+            <p>每个工程独立保存图集、触发规则、窗口位置与显示状态，并能同时出现在桌面。</p>
+            <div class="pet-stack" aria-hidden="true">
+              <span><img src="assets/naruto-idle.png" alt="" /></span>
+              <span><img src="assets/app-icon.png" alt="" /></span>
+              <i>+</i>
+            </div>
+          </article>
+
+          <article class="bento reveal" data-delay="1">
+            <div class="card-kicker">Open format</div>
+            <h3>一张大 PNG，双向互通。</h3>
+            <p>保留 Codex v2 固定图集兼容，同时允许自定义动作数量、帧数和图集网格。</p>
+            <div class="format-mark" aria-hidden="true">
+              <span>8 × 11</span>
+              <div class="mini-grid"></div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section workflow-section" id="workflow">
+        <div class="shell">
+          <div class="section-heading section-heading-light reveal">
+            <span class="section-index">02 / 工作流</span>
+            <h2>从图集到桌面，<br />只有三个动作。</h2>
+          </div>
+          <div class="steps">
+            <article class="step reveal">
+              <span>01</span>
+              <div class="step-icon">⌗</div>
+              <h3>导入工程</h3>
+              <p>选择 <code>pet.json</code>，应用读取同目录的大图集和 Studio 配置。</p>
+            </article>
+            <article class="step reveal" data-delay="1">
+              <span>02</span>
+              <div class="step-icon">⌁</div>
+              <h3>编排动作</h3>
+              <p>逐帧微调，设置播放次数与优先级，再为动作选择触发事件。</p>
+            </article>
+            <article class="step reveal" data-delay="2">
+              <span>03</span>
+              <div class="step-icon">↗</div>
+              <h3>放到桌面</h3>
+              <p>开启工程显示；每只桌宠独立运行、移动并响应自己的事件。</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section shell format-section" id="format">
+        <div class="section-heading reveal">
+          <span class="section-index">03 / 工程格式</span>
+          <h2>透明、可读，<br />没有隐藏的素材库。</h2>
+          <p>导出的工程就是 JSON 配置加一张完整 PNG，易于备份，也方便继续交给其他工具。</p>
+        </div>
+        <div class="format-panel reveal">
+          <div class="format-copy">
+            <span class="format-badge">Codex v2 compatible</span>
+            <h3>保留简单，才能保持自由。</h3>
+            <p>
+              <code>pet.json</code> 描述身份与图集位置，<code>spritesheet.png</code> 保存全部画面，
+              <code>studio.json</code> 则记录更丰富的动作和触发逻辑。
+            </p>
+            <a
+              href="https://github.com/herbit2004/sprite-pet-studio/blob/main/docs/PROJECT_FORMAT.md"
+              target="_blank"
+              rel="noreferrer"
+            >查看格式文档 <span>↗</span></a>
+          </div>
+          <pre aria-label="工程目录结构"><code><span>my-pet/</span>
+├── <b>pet.json</b>          <i># 身份与图集路径</i>
+├── <b>spritesheet.png</b>   <i># 唯一完整图集</i>
+└── <b>studio.json</b>       <i># 动作与事件逻辑</i></code></pre>
+        </div>
+      </section>
+
+      <section class="download-section shell reveal">
+        <div class="download-glow" aria-hidden="true"></div>
+        <div>
+          <span class="section-index">Ready when you are</span>
+          <h2>把桌面留一小块，<br />给一个有性格的角色。</h2>
+          <p>
+            最新版本 <strong data-version>v0.1.0</strong> · macOS 14 或更新版本
+            <span data-size></span>
+          </p>
+        </div>
+        <div class="download-actions">
+          <a
+            class="button button-light"
+            data-release-download
+            href="https://github.com/herbit2004/sprite-pet-studio/releases/latest/download/SpritePetStudio-macOS.zip"
+          >
+            下载 SpritePet Studio
+            <span aria-hidden="true">↓</span>
+          </a>
+          <small>开源 · 本地运行 · 不收集数据</small>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer shell">
+      <a class="brand" href="#top">
+        <img src="assets/app-icon.png" alt="" />
+        <span>SpritePet Studio</span>
+      </a>
+      <p>Native desktop companions, built frame by frame.</p>
+      <div>
+        <a href="https://github.com/herbit2004/sprite-pet-studio/releases">Releases</a>
+        <a href="https://github.com/herbit2004/sprite-pet-studio">GitHub</a>
+        <span>© <span data-year></span></span>
+      </div>
+    </footer>
+  </body>
+</html>
