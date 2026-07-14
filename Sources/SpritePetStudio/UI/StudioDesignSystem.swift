@@ -50,6 +50,61 @@ extension StudioPageHeader where Trailing == EmptyView {
     }
 }
 
+struct StudioCollapsiblePageHeader<Trailing: View>: View {
+    let eyebrow: String
+    let title: String
+    let subtitle: String
+    let isCollapsed: Bool
+    @ViewBuilder let trailing: () -> Trailing
+
+    init(
+        eyebrow: String,
+        title: String,
+        subtitle: String,
+        isCollapsed: Bool,
+        @ViewBuilder trailing: @escaping () -> Trailing
+    ) {
+        self.eyebrow = eyebrow
+        self.title = title
+        self.subtitle = subtitle
+        self.isCollapsed = isCollapsed
+        self.trailing = trailing
+    }
+
+    var body: some View {
+        Group {
+            if isCollapsed {
+                HStack(spacing: 16) {
+                    Text(title)
+                        .font(.title3.bold())
+                    Spacer()
+                    trailing()
+                }
+                .frame(minHeight: 42)
+            } else {
+                StudioPageHeader(
+                    eyebrow: eyebrow,
+                    title: title,
+                    subtitle: subtitle,
+                    trailing: trailing
+                )
+            }
+        }
+        .animation(.easeInOut(duration: 0.18), value: isCollapsed)
+    }
+}
+
+extension StudioCollapsiblePageHeader where Trailing == EmptyView {
+    init(eyebrow: String, title: String, subtitle: String, isCollapsed: Bool) {
+        self.init(
+            eyebrow: eyebrow,
+            title: title,
+            subtitle: subtitle,
+            isCollapsed: isCollapsed
+        ) { EmptyView() }
+    }
+}
+
 struct StudioCard<Content: View>: View {
     var isSelected = false
     @ViewBuilder let content: () -> Content

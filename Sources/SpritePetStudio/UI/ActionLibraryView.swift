@@ -4,13 +4,15 @@ import SwiftUI
 struct ActionLibraryView: View {
     @ObservedObject var model: AppModel
     @State private var selectedActionID: String?
+    @State private var isHeaderCollapsed = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: StudioTheme.pageSpacing) {
-            StudioPageHeader(
+            StudioCollapsiblePageHeader(
                 eyebrow: "Animation Library",
                 title: "动作编辑",
-                subtitle: "逐帧调整当前工程的图片、播放方式和触发规则。动作结构来自工程采用的配置。"
+                subtitle: "逐帧调整当前工程的图片、播放方式和触发规则。动作结构来自工程采用的配置。",
+                isCollapsed: isHeaderCollapsed
             )
             .padding(.horizontal, StudioTheme.pagePadding)
 
@@ -58,7 +60,12 @@ struct ActionLibraryView: View {
                     if let selectedActionID,
                        let action = model.bindingForAction(id: selectedActionID),
                        let project = model.currentProject {
-                        ActionEditorView(model: model, action: action, project: project)
+                        ActionEditorView(
+                            model: model,
+                            action: action,
+                            project: project,
+                            isHeaderCollapsed: $isHeaderCollapsed
+                        )
                     } else {
                         ContentUnavailableView(
                             "选择一套动作",
@@ -79,6 +86,7 @@ struct ActionLibraryView: View {
         }
         .onChange(of: model.document.selectedProjectID) { _, _ in
             selectedActionID = model.currentProject?.actions.first?.id
+            isHeaderCollapsed = false
         }
     }
 }
@@ -87,6 +95,7 @@ private struct ActionEditorView: View {
     @ObservedObject var model: AppModel
     @Binding var action: PetActionDefinition
     let project: PetProjectDefinition
+    @Binding var isHeaderCollapsed: Bool
     @State private var selectedFrameID: UUID?
 
     private var layout: AtlasActionConfiguration? {
@@ -94,7 +103,10 @@ private struct ActionEditorView: View {
     }
 
     var body: some View {
-        ScrollView {
+        HeaderPriorityScrollView(
+            isHeaderCollapsed: $isHeaderCollapsed,
+            resetKey: action.id
+        ) {
             VStack(alignment: .leading, spacing: 14) {
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
@@ -120,7 +132,10 @@ private struct ActionEditorView: View {
             .padding(.bottom, StudioTheme.pagePadding)
         }
         .onAppear { selectAValidFrame() }
-        .onChange(of: action.id) { _, _ in selectAValidFrame() }
+        .onChange(of: action.id) { _, _ in
+            isHeaderCollapsed = false
+            selectAValidFrame()
+        }
         .onChange(of: action.frames.map(\.id)) { _, _ in selectAValidFrame() }
     }
 

@@ -4,13 +4,15 @@ struct ConfigurationLibraryView: View {
     @ObservedObject var model: AppModel
     @State private var selectedID: String?
     @State private var draft: AtlasConfiguration?
+    @State private var isHeaderCollapsed = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: StudioTheme.pageSpacing) {
-            StudioPageHeader(
+            StudioCollapsiblePageHeader(
                 eyebrow: "Layout Presets",
                 title: "配置库",
-                subtitle: "集中管理动作标签、帧数与图集网格；Codex v2 是默认只读模板。"
+                subtitle: "集中管理动作标签、帧数与图集网格；Codex v2 是默认只读模板。",
+                isCollapsed: isHeaderCollapsed
             ) {
                 HStack {
                     Button {
@@ -45,6 +47,7 @@ struct ConfigurationLibraryView: View {
                             get: { self.draft ?? draft },
                             set: { self.draft = $0 }
                         ),
+                        isHeaderCollapsed: $isHeaderCollapsed,
                         linkedProjectCount: model.document.projects.filter { $0.configurationLibraryID == draft.id }.count,
                         save: {
                             if model.saveConfiguration(self.draft ?? draft) {
@@ -124,20 +127,23 @@ struct ConfigurationLibraryView: View {
     private func select(_ id: String?) {
         selectedID = id
         draft = model.document.atlasConfigurations.first { $0.id == id }
+        isHeaderCollapsed = false
     }
 }
 
 private struct ConfigurationDetailEditor: View {
     @Binding var configuration: AtlasConfiguration
+    @Binding var isHeaderCollapsed: Bool
     let linkedProjectCount: Int
     let save: () -> Void
     let duplicate: () -> Void
 
     var body: some View {
-        ScrollViewReader { proxy in
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    Color.clear.frame(height: 1).id("configuration-detail-top")
+        HeaderPriorityScrollView(
+            isHeaderCollapsed: $isHeaderCollapsed,
+            resetKey: configuration.id
+        ) {
+            VStack(alignment: .leading, spacing: 16) {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(configuration.name)
@@ -220,15 +226,11 @@ private struct ConfigurationDetailEditor: View {
                             .disabled(configuration.isBuiltIn)
                     }
                 }
-                }
-                .padding(.top, 8)
-                .padding(.leading, 6)
-                .padding(.trailing, StudioTheme.pagePadding)
-                .padding(.bottom, StudioTheme.pagePadding)
             }
-            .defaultScrollAnchor(.top)
-            .onAppear { scrollToTop(proxy) }
-            .onChange(of: configuration.id) { _, _ in scrollToTop(proxy) }
+            .padding(.top, 8)
+            .padding(.leading, 6)
+            .padding(.trailing, StudioTheme.pagePadding)
+            .padding(.bottom, StudioTheme.pagePadding)
         }
     }
 
@@ -302,9 +304,4 @@ private struct ConfigurationDetailEditor: View {
         return Int(ceil(Double(max(1, action.frameCount)) / Double(action.occupiedRowCount)))
     }
 
-    private func scrollToTop(_ proxy: ScrollViewProxy) {
-        DispatchQueue.main.async {
-            proxy.scrollTo("configuration-detail-top", anchor: .top)
-        }
-    }
 }
