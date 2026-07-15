@@ -9,6 +9,7 @@ final class AppModel: ObservableObject {
     @Published var document: AppDocument
     @Published var lastError: String? = nil
     @Published var loginItemStatusText = ""
+    @Published private(set) var atlasContentRevision: UInt64 = 0
 
     let store: DocumentStore
     let bus = PetEventBus()
@@ -25,7 +26,7 @@ final class AppModel: ObservableObject {
         do {
             document = try store.load()
         } catch {
-            var fallback = (try? store.bundledNaruto()) ?? PetProjectDefinition(
+            let emergencyFallback = PetProjectDefinition(
                 id: "empty",
                 name: "空工程",
                 author: "",
@@ -43,11 +44,14 @@ final class AppModel: ObservableObject {
                 defaultActionID: "idle",
                 actions: []
             )
-            fallback.isVisibleOnDesktop = true
+            var fallbackProjects = (try? store.bundledProjects()) ?? [emergencyFallback]
+            for index in fallbackProjects.indices {
+                fallbackProjects[index].isVisibleOnDesktop = true
+            }
             document = AppDocument(
-                selectedProjectID: fallback.id,
+                selectedProjectID: fallbackProjects[0].id,
                 general: GeneralSettings(),
-                projects: [fallback]
+                projects: fallbackProjects
             )
             lastError = error.localizedDescription
         }
@@ -175,6 +179,8 @@ final class AppModel: ObservableObject {
             let path = try store.bakeFrameTransform(frame, project: project)
             document.projects[projectIndex].atlas.imagePath = path
             document.projects[projectIndex].actions[actionIndex].frames[frameIndex].scale = 1
+            document.projects[projectIndex].actions[actionIndex].frames[frameIndex].scaleX = 1
+            document.projects[projectIndex].actions[actionIndex].frames[frameIndex].scaleY = 1
             document.projects[projectIndex].actions[actionIndex].frames[frameIndex].offsetX = 0
             document.projects[projectIndex].actions[actionIndex].frames[frameIndex].offsetY = 0
             try refreshEditedAtlas(projectIndex: projectIndex)
@@ -183,10 +189,61 @@ final class AppModel: ObservableObject {
         }
     }
 
+    func resetFrameTransform(actionID: String, frameID: UUID) {
+        guard let projectIndex = currentProjectIndex,
+              let actionIndex = document.projects[projectIndex].actions.firstIndex(where: { $0.id == actionID }),
+              let frameIndex = document.projects[projectIndex].actions[actionIndex].frames.firstIndex(where: { $0.id == frameID }) else { return }
+
+        var frame = document.projects[projectIndex].actions[actionIndex].frames[frameIndex]
+        frame.scale = 1
+        frame.scaleX = 1
+        frame.scaleY = 1
+        frame.offsetX = 0
+        frame.offsetY = 0
+        document.projects[projectIndex].actions[actionIndex].frames[frameIndex] = frame
+    }
+
+    func bakeFrameTransforms(actionID: String, frameIDs: Set<UUID>) {
+        guard !frameIDs.isEmpty,
+              let projectIndex = currentProjectIndex,
+              let actionIndex = document.projects[projectIndex].actions.firstIndex(where: { $0.id == actionID }) else { return }
+        let selectedFrames = document.projects[projectIndex].actions[actionIndex].frames.filter {
+            frameIDs.contains($0.id)
+        }
+        guard selectedFrames.contains(where: frameHasDraftTransform) else { return }
+
+        do {
+            let project = document.projects[projectIndex]
+            let path = try store.bakeFrameTransforms(in: project, frameIDs: frameIDs)
+            document.projects[projectIndex].atlas.imagePath = path
+            resetFrameTransformsInDocument(
+                projectIndex: projectIndex,
+                actionIndex: actionIndex,
+                frameIDs: frameIDs
+            )
+            try refreshEditedAtlas(projectIndex: projectIndex)
+        } catch {
+            lastError = error.localizedDescription
+        }
+    }
+
+    func resetFrameTransforms(actionID: String, frameIDs: Set<UUID>) {
+        guard !frameIDs.isEmpty,
+              let projectIndex = currentProjectIndex,
+              let actionIndex = document.projects[projectIndex].actions.firstIndex(where: { $0.id == actionID }) else { return }
+        resetFrameTransformsInDocument(
+            projectIndex: projectIndex,
+            actionIndex: actionIndex,
+            frameIDs: frameIDs
+        )
+    }
+
     func draftTransformCount(projectID: String) -> Int {
         guard let project = document.projects.first(where: { $0.id == projectID }) else { return 0 }
         return project.actions.flatMap(\.frames).filter { frame in
             abs(frame.scale - 1) > 0.0001
+                || abs(frame.scaleX - 1) > 0.0001
+                || abs(frame.scaleY - 1) > 0.0001
                 || abs(frame.offsetX) > 0.0001
                 || abs(frame.offsetY) > 0.0001
         }.count
@@ -202,6 +259,8 @@ final class AppModel: ObservableObject {
             for actionIndex in document.projects[projectIndex].actions.indices {
                 for frameIndex in document.projects[projectIndex].actions[actionIndex].frames.indices {
                     document.projects[projectIndex].actions[actionIndex].frames[frameIndex].scale = 1
+                    document.projects[projectIndex].actions[actionIndex].frames[frameIndex].scaleX = 1
+                    document.projects[projectIndex].actions[actionIndex].frames[frameIndex].scaleY = 1
                     document.projects[projectIndex].actions[actionIndex].frames[frameIndex].offsetX = 0
                     document.projects[projectIndex].actions[actionIndex].frames[frameIndex].offsetY = 0
                 }
@@ -210,6 +269,22 @@ final class AppModel: ObservableObject {
         } catch {
             lastError = error.localizedDescription
         }
+    }
+
+    func resetAllFrameTransforms(projectID: String) {
+        guard let projectIndex = document.projects.firstIndex(where: { $0.id == projectID }),
+              draftTransformCount(projectID: projectID) > 0 else { return }
+        var project = document.projects[projectIndex]
+        for actionIndex in project.actions.indices {
+            for frameIndex in project.actions[actionIndex].frames.indices {
+                project.actions[actionIndex].frames[frameIndex].scale = 1
+                project.actions[actionIndex].frames[frameIndex].scaleX = 1
+                project.actions[actionIndex].frames[frameIndex].scaleY = 1
+                project.actions[actionIndex].frames[frameIndex].offsetX = 0
+                project.actions[actionIndex].frames[frameIndex].offsetY = 0
+            }
+        }
+        document.projects[projectIndex] = project
     }
 
     func bindingForAction(id: String) -> Binding<PetActionDefinition>? {
@@ -574,7 +649,31 @@ final class AppModel: ObservableObject {
         try store.save(document)
         try petWindows[project.id]?.reloadProject(project)
         triggerEngines[project.id]?.reset()
-        objectWillChange.send()
+        atlasContentRevision &+= 1
+    }
+
+    private func frameHasDraftTransform(_ frame: PetFrameDefinition) -> Bool {
+        abs(frame.scale - 1) > 0.0001
+            || abs(frame.scaleX - 1) > 0.0001
+            || abs(frame.scaleY - 1) > 0.0001
+            || abs(frame.offsetX) > 0.0001
+            || abs(frame.offsetY) > 0.0001
+    }
+
+    private func resetFrameTransformsInDocument(
+        projectIndex: Int,
+        actionIndex: Int,
+        frameIDs: Set<UUID>
+    ) {
+        var action = document.projects[projectIndex].actions[actionIndex]
+        for frameIndex in action.frames.indices where frameIDs.contains(action.frames[frameIndex].id) {
+            action.frames[frameIndex].scale = 1
+            action.frames[frameIndex].scaleX = 1
+            action.frames[frameIndex].scaleY = 1
+            action.frames[frameIndex].offsetX = 0
+            action.frames[frameIndex].offsetY = 0
+        }
+        document.projects[projectIndex].actions[actionIndex] = action
     }
 
     private func synchronizePetSessions(

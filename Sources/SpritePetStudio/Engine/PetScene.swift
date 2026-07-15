@@ -162,7 +162,8 @@ final class PetScene: SKScene {
             x: frame.offsetX * Double(viewportScale),
             y: frame.offsetY * Double(viewportScale)
         )
-        sprite.setScale(frame.scale)
+        sprite.xScale = frame.scale * frame.scaleX
+        sprite.yScale = frame.scale * frame.scaleY
     }
 
     private func inferredAngle(_ index: Int, count: Int) -> Double {

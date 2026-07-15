@@ -280,6 +280,8 @@ struct PetFrameDefinition: Codable, Identifiable, Equatable {
     var offsetX: Double = 0
     var offsetY: Double = 0
     var scale: Double = 1
+    var scaleX: Double = 1
+    var scaleY: Double = 1
     var angleDegrees: Double?
 }
 
@@ -436,6 +438,52 @@ extension PetActionDefinition {
             frames: [PetFrameDefinition(column: 0, row: 0)],
             triggers: [TriggerRule(kind: .manual)]
         )
+    }
+}
+
+extension PetFrameDefinition {
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case column
+        case row
+        case durationMultiplier
+        case offsetX
+        case offsetY
+        case scale
+        case scaleX
+        case scaleY
+        case angleDegrees
+    }
+
+    /// Older projects only contain the uniform `scale` value. Missing axis
+    /// scales decode as 1 so existing Studio and Codex v2 projects retain
+    /// their exact appearance when opened by a newer app.
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
+        column = try container.decode(Int.self, forKey: .column)
+        row = try container.decode(Int.self, forKey: .row)
+        durationMultiplier = try container.decodeIfPresent(Double.self, forKey: .durationMultiplier) ?? 1
+        offsetX = try container.decodeIfPresent(Double.self, forKey: .offsetX) ?? 0
+        offsetY = try container.decodeIfPresent(Double.self, forKey: .offsetY) ?? 0
+        scale = try container.decodeIfPresent(Double.self, forKey: .scale) ?? 1
+        scaleX = try container.decodeIfPresent(Double.self, forKey: .scaleX) ?? 1
+        scaleY = try container.decodeIfPresent(Double.self, forKey: .scaleY) ?? 1
+        angleDegrees = try container.decodeIfPresent(Double.self, forKey: .angleDegrees)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(column, forKey: .column)
+        try container.encode(row, forKey: .row)
+        try container.encode(durationMultiplier, forKey: .durationMultiplier)
+        try container.encode(offsetX, forKey: .offsetX)
+        try container.encode(offsetY, forKey: .offsetY)
+        try container.encode(scale, forKey: .scale)
+        try container.encode(scaleX, forKey: .scaleX)
+        try container.encode(scaleY, forKey: .scaleY)
+        try container.encodeIfPresent(angleDegrees, forKey: .angleDegrees)
     }
 }
 

@@ -891,6 +891,7 @@ a {
 .pet-stack span + span { margin-left: -26px; transform: rotate(7deg); }
 .pet-stack img { width: 100%; height: 100%; object-fit: contain; }
 .pet-stack span:first-child img { width: 76%; image-rendering: pixelated; }
+.pet-stack span:nth-child(2) img { width: 82%; height: 82%; }
 .pet-stack i { margin: 0 0 10px -12px; padding: 8px; border-radius: 50%; background: var(--ink); color: #fff; font-style: normal; }
 
 .format-mark {

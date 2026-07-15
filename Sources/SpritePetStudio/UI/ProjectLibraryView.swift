@@ -6,6 +6,7 @@ struct ProjectLibraryView: View {
     @State private var renameProject: PetProjectDefinition?
     @State private var editingProjectID: String?
     @State private var projectPendingNormalization: PetProjectDefinition?
+    @State private var projectPendingReset: PetProjectDefinition?
 
     private let columns = [GridItem(.adaptive(minimum: 285), spacing: 16)]
 
@@ -53,6 +54,24 @@ struct ProjectLibraryView: View {
         } message: {
             Text("全部逐帧缩放和 X/Y 位移会永久写入这个工程的 spritesheet.png，随后调整值统一复位。")
         }
+        .confirmationDialog(
+            "复原“\(projectPendingReset?.name ?? "本工程")”的全部帧参数？",
+            isPresented: Binding(
+                get: { projectPendingReset != nil },
+                set: { if !$0 { projectPendingReset = nil } }
+            ),
+            titleVisibility: .visible
+        ) {
+            if let project = projectPendingReset {
+                Button("复原 \(model.draftTransformCount(projectID: project.id)) 个已调整帧") {
+                    model.resetAllFrameTransforms(projectID: project.id)
+                    projectPendingReset = nil
+                }
+            }
+            Button("取消", role: .cancel) { projectPendingReset = nil }
+        } message: {
+            Text("只把逐帧缩放恢复为 100%、X/Y 位移恢复为 0；不会修改 spritesheet.png。")
+        }
     }
 
     private var projectLibrary: some View {
@@ -89,7 +108,8 @@ struct ProjectLibraryView: View {
             model: model,
             editedProject: project,
             onBackToProjectLibrary: { editingProjectID = nil },
-            onRequestNormalization: { projectPendingNormalization = $0 }
+            onRequestNormalization: { projectPendingNormalization = $0 },
+            onRequestReset: { projectPendingReset = $0 }
         )
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
@@ -106,7 +126,11 @@ struct ProjectLibraryView: View {
                             startPoint: .top,
                             endPoint: .bottom
                         )
-                        ProjectLivePreview(project: project, store: model.store)
+                        ProjectLivePreview(
+                            project: project,
+                            store: model.store,
+                            atlasContentRevision: model.atlasContentRevision
+                        )
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
                     .frame(height: 170)
@@ -135,6 +159,10 @@ struct ProjectLibraryView: View {
                         }
                         Button("一键归一化全部帧") {
                             projectPendingNormalization = project
+                        }
+                        .disabled(model.draftTransformCount(projectID: project.id) == 0)
+                        Button("一键复原全部帧参数") {
+                            projectPendingReset = project
                         }
                         .disabled(model.draftTransformCount(projectID: project.id) == 0)
                         Button("导出工程…") {

@@ -10,6 +10,7 @@ struct ActionLibraryView: View {
     let editedProject: PetProjectDefinition?
     let onBackToProjectLibrary: (() -> Void)?
     let onRequestNormalization: ((PetProjectDefinition) -> Void)?
+    let onRequestReset: ((PetProjectDefinition) -> Void)?
     @State private var selectedActionID: String?
     @State private var isHeaderCollapsed = false
 
@@ -17,12 +18,14 @@ struct ActionLibraryView: View {
         model: AppModel,
         editedProject: PetProjectDefinition? = nil,
         onBackToProjectLibrary: (() -> Void)? = nil,
-        onRequestNormalization: ((PetProjectDefinition) -> Void)? = nil
+        onRequestNormalization: ((PetProjectDefinition) -> Void)? = nil,
+        onRequestReset: ((PetProjectDefinition) -> Void)? = nil
     ) {
         self.model = model
         self.editedProject = editedProject
         self.onBackToProjectLibrary = onBackToProjectLibrary
         self.onRequestNormalization = onRequestNormalization
+        self.onRequestReset = onRequestReset
     }
 
     var body: some View {
@@ -163,12 +166,21 @@ struct ActionLibraryView: View {
 
             Spacer(minLength: 8)
 
-            Button {
-                onRequestNormalization?(project)
-            } label: {
-                Label("一键归一化全部帧", systemImage: "square.stack.3d.down.right")
+            HStack(spacing: 8) {
+                Button {
+                    onRequestNormalization?(project)
+                } label: {
+                    Label("一键归一化全部帧", systemImage: "square.stack.3d.down.right")
+                }
+                .disabled(model.draftTransformCount(projectID: project.id) == 0)
+
+                Button {
+                    onRequestReset?(project)
+                } label: {
+                    Label("一键复原", systemImage: "arrow.uturn.backward")
+                }
+                .disabled(model.draftTransformCount(projectID: project.id) == 0)
             }
-            .disabled(model.draftTransformCount(projectID: project.id) == 0)
         }
         .animation(.easeInOut(duration: 0.18), value: isHeaderCollapsed)
     }
@@ -179,7 +191,7 @@ private struct ActionEditorView: View {
     @Binding var action: PetActionDefinition
     let project: PetProjectDefinition
     @Binding var isHeaderCollapsed: Bool
-    @State private var selectedFrameID: UUID?
+    @State private var selectedFrameIDs: Set<UUID> = []
 
     private var layout: AtlasActionConfiguration? {
         project.effectiveAtlasConfiguration.actions.first { $0.key == action.id }
@@ -218,12 +230,12 @@ private struct ActionEditorView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .clipped()
-        .onAppear { selectAValidFrame() }
+        .onAppear { selectAValidFrames() }
         .onChange(of: action.id) { _, _ in
             isHeaderCollapsed = false
-            selectAValidFrame()
+            selectedFrameIDs = action.frames.first.map { Set([$0.id]) } ?? []
         }
-        .onChange(of: action.frames.map(\.id)) { _, _ in selectAValidFrame() }
+        .onChange(of: action.frames.map(\.id)) { _, _ in selectAValidFrames() }
     }
 
     private var playbackSettings: some View {
@@ -298,9 +310,15 @@ private struct ActionEditorView: View {
     private var frameEditor: some View {
         GroupBox("固定图集帧") {
             VStack(alignment: .leading, spacing: 12) {
-                Text("缩略图顺序由“\(project.effectiveAtlasConfiguration.name)”配置决定。要改变动作或帧数，请到配置库编辑对应配置。")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                HStack(alignment: .firstTextBaseline) {
+                    Text("缩略图顺序由“\(project.effectiveAtlasConfiguration.name)”配置决定。单击选择一帧，按住 ⌘ Command 单击可多选。")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Text("已选 \(selectedFrameIDs.count) 帧")
+                        .font(.caption.bold())
+                        .foregroundStyle(selectedFrameIDs.count > 1 ? Color.accentColor : Color.secondary)
+                }
 
                 ScrollView(.horizontal) {
                     LazyHStack(spacing: 8) {
@@ -310,9 +328,14 @@ private struct ActionEditorView: View {
                                 frame: frame,
                                 image: model.frameImage(frame),
                                 atlas: project.atlas,
-                                isSelected: selectedFrameID == frame.id
+                                isSelected: selectedFrameIDs.contains(frame.id)
                             )
-                            .onTapGesture { selectedFrameID = frame.id }
+                            .onTapGesture {
+                                selectFrame(
+                                    frame.id,
+                                    extendingSelection: NSEvent.modifierFlags.contains(.command)
+                                )
+                            }
                         }
                     }
                     .padding(.vertical, 2)
@@ -320,8 +343,15 @@ private struct ActionEditorView: View {
 
                 Divider()
 
-                if let frame = selectedFrameBinding,
-                   let index = action.frames.firstIndex(where: { $0.id == frame.wrappedValue.id }) {
+                if selectedFrameIDs.count > 1 {
+                    MultiFrameEditor(
+                        model: model,
+                        action: $action,
+                        selectedFrameIDs: selectedFrameIDs,
+                        project: project
+                    )
+                } else if let frame = selectedFrameBinding,
+                          let index = action.frames.firstIndex(where: { $0.id == frame.wrappedValue.id }) {
                     SelectedFrameEditor(
                         model: model,
                         actionID: action.id,
@@ -358,14 +388,31 @@ private struct ActionEditorView: View {
     }
 
     private var selectedFrameBinding: Binding<PetFrameDefinition>? {
-        guard let selectedFrameID,
+        guard let selectedFrameID = action.frames.first(where: { selectedFrameIDs.contains($0.id) })?.id,
               let index = action.frames.firstIndex(where: { $0.id == selectedFrameID }) else { return nil }
         return Binding(get: { action.frames[index] }, set: { action.frames[index] = $0 })
     }
 
-    private func selectAValidFrame() {
-        if let selectedFrameID, action.frames.contains(where: { $0.id == selectedFrameID }) { return }
-        selectedFrameID = action.frames.first?.id
+    private func selectAValidFrames() {
+        let validIDs = Set(action.frames.map(\.id))
+        selectedFrameIDs.formIntersection(validIDs)
+        if selectedFrameIDs.isEmpty, let firstID = action.frames.first?.id {
+            selectedFrameIDs = [firstID]
+        }
+    }
+
+    private func selectFrame(_ frameID: UUID, extendingSelection: Bool) {
+        guard extendingSelection else {
+            selectedFrameIDs = [frameID]
+            return
+        }
+        if selectedFrameIDs.contains(frameID) {
+            if selectedFrameIDs.count > 1 {
+                selectedFrameIDs.remove(frameID)
+            }
+        } else {
+            selectedFrameIDs.insert(frameID)
+        }
     }
 }
 
@@ -380,7 +427,11 @@ private struct SelectedFrameEditor: View {
     @State private var showsIdleReference = false
 
     private var hasDraftTransform: Bool {
-        abs(frame.scale - 1) > 0.0001 || abs(frame.offsetX) > 0.0001 || abs(frame.offsetY) > 0.0001
+        abs(frame.scale - 1) > 0.0001
+            || abs(frame.scaleX - 1) > 0.0001
+            || abs(frame.scaleY - 1) > 0.0001
+            || abs(frame.offsetX) > 0.0001
+            || abs(frame.offsetY) > 0.0001
     }
 
     private var idleReferenceFrame: PetFrameDefinition? {
@@ -409,7 +460,7 @@ private struct SelectedFrameEditor: View {
                 atlas: project.atlas,
                 referenceFrame: showsIdleReference ? idleReferenceFrame : nil,
                 referenceImage: showsIdleReference ? idleReferenceFrame.flatMap(model.frameImage) : nil,
-                adaptiveViewport: true
+                showsViewportGuide: true
             )
                 .frame(width: 280, height: 304)
                 .overlay(alignment: .topLeading) {
@@ -434,7 +485,7 @@ private struct SelectedFrameEditor: View {
                     .padding(7)
                     .help("将图集左上角的常态首帧半透明叠加在当前帧上")
                 }
-            Text("来源：工程中的 spritesheet.png 固定格位；超出格位时预览会自动缩小视野")
+            Text("固定视口：\(project.atlas.cellWidth) × \(project.atlas.cellHeight) px；中心十字与外框不会随参数变化，超出部分按桌宠窗口效果裁切")
                 .font(.caption)
                 .foregroundStyle(.secondary)
             if let fixedAngle {
@@ -465,10 +516,24 @@ private struct SelectedFrameEditor: View {
 
             GroupBox("这一帧的大小与位置") {
                 VStack(alignment: .leading, spacing: 10) {
-                    LabeledContent("相对大小") {
+                    LabeledContent("整体缩放") {
                         Slider(value: $frame.scale, in: 0.25...2, step: 0.01)
                             .frame(maxWidth: 210)
                         Text("\(Int(frame.scale * 100))%")
+                            .monospacedDigit()
+                            .frame(width: 46, alignment: .trailing)
+                    }
+                    LabeledContent("横向缩放") {
+                        Slider(value: $frame.scaleX, in: 0.25...2, step: 0.01)
+                            .frame(maxWidth: 210)
+                        Text("\(Int(frame.scaleX * 100))%")
+                            .monospacedDigit()
+                            .frame(width: 46, alignment: .trailing)
+                    }
+                    LabeledContent("纵向缩放") {
+                        Slider(value: $frame.scaleY, in: 0.25...2, step: 0.01)
+                            .frame(maxWidth: 210)
+                        Text("\(Int(frame.scaleY * 100))%")
                             .monospacedDigit()
                             .frame(width: 46, alignment: .trailing)
                     }
@@ -482,16 +547,25 @@ private struct SelectedFrameEditor: View {
                             offsetYStepper
                         }
                     }
-                    Text("X 为正向右，Y 为正向上；这些数值先作为工程草稿，不会改变原图。")
+                    Text("整体、横向和纵向缩放会叠加；X 为正向右，Y 为正向上。这些数值先作为工程草稿，不会改变原图。")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
-                    Button {
-                        model.bakeFrameTransform(actionID: actionID, frameID: frame.id)
-                    } label: {
-                        Label("归一化并写入图集", systemImage: "square.and.arrow.down")
+                    HStack(spacing: 8) {
+                        Button {
+                            model.bakeFrameTransform(actionID: actionID, frameID: frame.id)
+                        } label: {
+                            Label("归一化并写入图集", systemImage: "square.and.arrow.down")
+                        }
+                        .disabled(!hasDraftTransform)
+
+                        Button {
+                            model.resetFrameTransform(actionID: actionID, frameID: frame.id)
+                        } label: {
+                            Label("复原参数", systemImage: "arrow.uturn.backward")
+                        }
+                        .disabled(!hasDraftTransform)
                     }
-                    .disabled(!hasDraftTransform)
-                    Text("归一化会把当前大小和位移永久烘焙进这一个格位，再把数值复位。之后导出的图集可直接拿回 Codex 使用。")
+                    Text("归一化会把三组缩放与位移永久烘焙进这一个格位；复原参数会把缩放全部恢复为 100%、X/Y 恢复为 0，不会修改图集。")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }
@@ -532,6 +606,273 @@ private struct SelectedFrameEditor: View {
     }
 }
 
+private struct MultiFrameEditor: View {
+    @ObservedObject var model: AppModel
+    @Binding var action: PetActionDefinition
+    let selectedFrameIDs: Set<UUID>
+    let project: PetProjectDefinition
+
+    @State private var showsIdleReference = false
+    @State private var overallPercentDelta = 0
+    @State private var horizontalPercentDelta = 0
+    @State private var verticalPercentDelta = 0
+    @State private var horizontalPixelDelta = 0
+    @State private var verticalPixelDelta = 0
+
+    private var orderedSelection: [(index: Int, frame: PetFrameDefinition)] {
+        action.frames.enumerated().compactMap { index, frame in
+            selectedFrameIDs.contains(frame.id) ? (index, frame) : nil
+        }
+    }
+
+    private var previewSelection: (index: Int, frame: PetFrameDefinition)? {
+        orderedSelection.first
+    }
+
+    private var idleReferenceFrame: PetFrameDefinition? {
+        project.actions.first?.frames.first
+    }
+
+    private var selectionKey: String {
+        orderedSelection.map { $0.frame.id.uuidString }.joined(separator: ",")
+    }
+
+    private var hasDraftTransform: Bool {
+        orderedSelection.contains { item in
+            let frame = item.frame
+            return abs(frame.scale - 1) > 0.0001
+                || abs(frame.scaleX - 1) > 0.0001
+                || abs(frame.scaleY - 1) > 0.0001
+                || abs(frame.offsetX) > 0.0001
+                || abs(frame.offsetY) > 0.0001
+        }
+    }
+
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: .top, spacing: 18) {
+                previewPane
+                controlsPane
+            }
+
+            VStack(alignment: .leading, spacing: 18) {
+                previewPane
+                controlsPane
+            }
+        }
+        .onChange(of: selectionKey) { _, _ in resetDisplayedDeltas() }
+    }
+
+    @ViewBuilder
+    private var previewPane: some View {
+        if let previewSelection {
+            VStack(alignment: .leading, spacing: 8) {
+                FrameCanvas(
+                    frame: previewSelection.frame,
+                    image: model.frameImage(previewSelection.frame),
+                    atlas: project.atlas,
+                    referenceFrame: showsIdleReference ? idleReferenceFrame : nil,
+                    referenceImage: showsIdleReference ? idleReferenceFrame.flatMap(model.frameImage) : nil,
+                    showsViewportGuide: true
+                )
+                .frame(width: 280, height: 304)
+                .overlay(alignment: .topLeading) {
+                    Text("预览第 \(previewSelection.index + 1) 帧")
+                        .font(.caption.bold())
+                        .padding(6)
+                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 6))
+                        .padding(7)
+                }
+                .overlay(alignment: .topTrailing) {
+                    Button {
+                        showsIdleReference.toggle()
+                    } label: {
+                        Label(
+                            showsIdleReference ? "关闭首帧参照" : "叠加常态首帧",
+                            systemImage: showsIdleReference ? "square.stack.3d.up.fill" : "square.stack.3d.up"
+                        )
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .tint(showsIdleReference ? .accentColor : nil)
+                    .padding(7)
+                }
+                Text("固定视口只显示所选帧中最靠前的一帧；其余所选帧按各自原参数同步增减")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    private var controlsPane: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            GroupBox("批量相对调整 · \(orderedSelection.count) 帧") {
+                VStack(alignment: .leading, spacing: 10) {
+                    RelativeAdjustmentRow(
+                        title: "整体缩放",
+                        accumulatedValue: signed(overallPercentDelta, unit: "%"),
+                        decrement: {
+                            adjustScale(\.scale, steps: -1)
+                            overallPercentDelta -= 1
+                        },
+                        increment: {
+                            adjustScale(\.scale, steps: 1)
+                            overallPercentDelta += 1
+                        }
+                    )
+                    RelativeAdjustmentRow(
+                        title: "横向缩放",
+                        accumulatedValue: signed(horizontalPercentDelta, unit: "%"),
+                        decrement: {
+                            adjustScale(\.scaleX, steps: -1)
+                            horizontalPercentDelta -= 1
+                        },
+                        increment: {
+                            adjustScale(\.scaleX, steps: 1)
+                            horizontalPercentDelta += 1
+                        }
+                    )
+                    RelativeAdjustmentRow(
+                        title: "纵向缩放",
+                        accumulatedValue: signed(verticalPercentDelta, unit: "%"),
+                        decrement: {
+                            adjustScale(\.scaleY, steps: -1)
+                            verticalPercentDelta -= 1
+                        },
+                        increment: {
+                            adjustScale(\.scaleY, steps: 1)
+                            verticalPercentDelta += 1
+                        }
+                    )
+                    RelativeAdjustmentRow(
+                        title: "水平 X",
+                        accumulatedValue: signed(horizontalPixelDelta, unit: " px"),
+                        decrement: {
+                            adjustOffset(\.offsetX, steps: -1, limit: project.atlas.cellWidth)
+                            horizontalPixelDelta -= 1
+                        },
+                        increment: {
+                            adjustOffset(\.offsetX, steps: 1, limit: project.atlas.cellWidth)
+                            horizontalPixelDelta += 1
+                        }
+                    )
+                    RelativeAdjustmentRow(
+                        title: "垂直 Y",
+                        accumulatedValue: signed(verticalPixelDelta, unit: " px"),
+                        decrement: {
+                            adjustOffset(\.offsetY, steps: -1, limit: project.atlas.cellHeight)
+                            verticalPixelDelta -= 1
+                        },
+                        increment: {
+                            adjustOffset(\.offsetY, steps: 1, limit: project.atlas.cellHeight)
+                            verticalPixelDelta += 1
+                        }
+                    )
+
+                    Text("右侧数值是本次多选后的累计增量。每次操作都在每一帧现有参数上分别加减，不会把所选帧强制设为同一个值。")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+
+                    HStack(spacing: 8) {
+                        Button {
+                            model.bakeFrameTransforms(
+                                actionID: action.id,
+                                frameIDs: selectedFrameIDs
+                            )
+                            resetDisplayedDeltas()
+                        } label: {
+                            Label("归一化所选帧", systemImage: "square.and.arrow.down")
+                        }
+                        .disabled(!hasDraftTransform)
+
+                        Button {
+                            model.resetFrameTransforms(
+                                actionID: action.id,
+                                frameIDs: selectedFrameIDs
+                            )
+                            resetDisplayedDeltas()
+                        } label: {
+                            Label("复原所选参数", systemImage: "arrow.uturn.backward")
+                        }
+                        .disabled(!hasDraftTransform)
+                    }
+                }
+            }
+
+            Text("多选模式只批量调整变换参数；单帧 PNG、停留时间和视线角度请切回单选后编辑。")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private func adjustScale(
+        _ keyPath: WritableKeyPath<PetFrameDefinition, Double>,
+        steps: Int
+    ) {
+        var updated = action
+        let delta = Double(steps) / 100
+        for index in updated.frames.indices where selectedFrameIDs.contains(updated.frames[index].id) {
+            let current = updated.frames[index][keyPath: keyPath]
+            updated.frames[index][keyPath: keyPath] = min(2, max(0.25, current + delta))
+        }
+        action = updated
+    }
+
+    private func adjustOffset(
+        _ keyPath: WritableKeyPath<PetFrameDefinition, Double>,
+        steps: Int,
+        limit: Int
+    ) {
+        var updated = action
+        let bound = Double(max(1, limit))
+        for index in updated.frames.indices where selectedFrameIDs.contains(updated.frames[index].id) {
+            let current = updated.frames[index][keyPath: keyPath]
+            updated.frames[index][keyPath: keyPath] = min(bound, max(-bound, current + Double(steps)))
+        }
+        action = updated
+    }
+
+    private func signed(_ value: Int, unit: String) -> String {
+        value > 0 ? "+\(value)\(unit)" : "\(value)\(unit)"
+    }
+
+    private func resetDisplayedDeltas() {
+        overallPercentDelta = 0
+        horizontalPercentDelta = 0
+        verticalPercentDelta = 0
+        horizontalPixelDelta = 0
+        verticalPixelDelta = 0
+    }
+}
+
+private struct RelativeAdjustmentRow: View {
+    let title: String
+    let accumulatedValue: String
+    let decrement: () -> Void
+    let increment: () -> Void
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Text(title)
+                .frame(width: 84, alignment: .leading)
+            Spacer(minLength: 12)
+            Button(action: decrement) {
+                Image(systemName: "minus")
+                    .frame(width: 22, height: 20)
+            }
+            .buttonStyle(.bordered)
+            Text(accumulatedValue)
+                .monospacedDigit()
+                .frame(width: 62, alignment: .center)
+            Button(action: increment) {
+                Image(systemName: "plus")
+                    .frame(width: 22, height: 20)
+            }
+            .buttonStyle(.borderedProminent)
+        }
+    }
+}
+
 private struct FrameThumbnail: View {
     let index: Int
     let frame: PetFrameDefinition
@@ -565,41 +906,38 @@ private struct FrameCanvas: View {
     let atlas: AtlasDefinition
     var referenceFrame: PetFrameDefinition? = nil
     var referenceImage: NSImage? = nil
-    var adaptiveViewport = false
+    var showsViewportGuide = false
 
     var body: some View {
         GeometryReader { proxy in
             let cellWidth = CGFloat(max(1, atlas.cellWidth))
             let cellHeight = CGFloat(max(1, atlas.cellHeight))
-            let baseFit = min(
+            let fit = min(
                 proxy.size.width / CGFloat(max(1, atlas.cellWidth)),
                 proxy.size.height / CGFloat(max(1, atlas.cellHeight))
             )
-            let halfExtents = requiredHalfExtents(cellWidth: cellWidth, cellHeight: cellHeight)
-            let adaptiveFit = min(
-                max(1, proxy.size.width - 16) / max(1, halfExtents.width * 2),
-                max(1, proxy.size.height - 16) / max(1, halfExtents.height * 2)
-            )
-            let fit = adaptiveViewport ? min(baseFit, adaptiveFit) : baseFit
-            ZStack {
+            let center = CGPoint(x: proxy.size.width / 2, y: proxy.size.height / 2)
+            ZStack(alignment: .topLeading) {
                 Color(nsColor: .controlBackgroundColor)
+                    .frame(width: proxy.size.width, height: proxy.size.height)
                 CheckerboardView()
                     .frame(width: cellWidth * fit, height: cellHeight * fit)
                     .overlay {
                         Rectangle()
                             .stroke(Color.secondary.opacity(0.5), style: StrokeStyle(lineWidth: 1, dash: [4, 3]))
                     }
+                    .position(center)
                 if let image {
                     Image(nsImage: image)
                         .resizable()
                         .interpolation(atlas.filtering == .nearest ? .none : .high)
                         .frame(
-                            width: CGFloat(atlas.cellWidth) * fit * CGFloat(frame.scale),
-                            height: CGFloat(atlas.cellHeight) * fit * CGFloat(frame.scale)
+                            width: CGFloat(atlas.cellWidth) * fit * CGFloat(frame.scale * frame.scaleX),
+                            height: CGFloat(atlas.cellHeight) * fit * CGFloat(frame.scale * frame.scaleY)
                         )
-                        .offset(
-                            x: CGFloat(frame.offsetX) * fit,
-                            y: -CGFloat(frame.offsetY) * fit
+                        .position(
+                            x: center.x + CGFloat(frame.offsetX) * fit,
+                            y: center.y - CGFloat(frame.offsetY) * fit
                         )
                 }
                 if let referenceFrame, let referenceImage {
@@ -607,43 +945,53 @@ private struct FrameCanvas: View {
                         .resizable()
                         .interpolation(atlas.filtering == .nearest ? .none : .high)
                         .frame(
-                            width: CGFloat(atlas.cellWidth) * fit * CGFloat(referenceFrame.scale),
-                            height: CGFloat(atlas.cellHeight) * fit * CGFloat(referenceFrame.scale)
+                            width: CGFloat(atlas.cellWidth) * fit * CGFloat(referenceFrame.scale * referenceFrame.scaleX),
+                            height: CGFloat(atlas.cellHeight) * fit * CGFloat(referenceFrame.scale * referenceFrame.scaleY)
                         )
-                        .offset(
-                            x: CGFloat(referenceFrame.offsetX) * fit,
-                            y: -CGFloat(referenceFrame.offsetY) * fit
+                        .position(
+                            x: center.x + CGFloat(referenceFrame.offsetX) * fit,
+                            y: center.y - CGFloat(referenceFrame.offsetY) * fit
                         )
                         .opacity(0.42)
                         .allowsHitTesting(false)
                 }
+                if showsViewportGuide {
+                    FixedViewportGuide()
+                        .frame(width: cellWidth * fit, height: cellHeight * fit)
+                        .position(center)
+                        .allowsHitTesting(false)
+                }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .frame(width: proxy.size.width, height: proxy.size.height, alignment: .topLeading)
             .clipped()
             .background(Color.clear)
         }
         .aspectRatio(CGFloat(atlas.cellWidth) / CGFloat(max(1, atlas.cellHeight)), contentMode: .fit)
         .overlay { Rectangle().stroke(Color.secondary.opacity(0.22)) }
     }
+}
 
-    private func requiredHalfExtents(cellWidth: CGFloat, cellHeight: CGFloat) -> CGSize {
-        var horizontal = cellWidth / 2
-        var vertical = cellHeight / 2
-
-        func include(_ candidate: PetFrameDefinition) {
-            horizontal = max(
-                horizontal,
-                abs(CGFloat(candidate.offsetX)) + cellWidth * max(0.01, CGFloat(candidate.scale)) / 2
-            )
-            vertical = max(
-                vertical,
-                abs(CGFloat(candidate.offsetY)) + cellHeight * max(0.01, CGFloat(candidate.scale)) / 2
-            )
+private struct FixedViewportGuide: View {
+    var body: some View {
+        GeometryReader { proxy in
+            ZStack {
+                Rectangle()
+                    .stroke(Color.primary.opacity(0.38), lineWidth: 1)
+                Path { path in
+                    path.move(to: CGPoint(x: proxy.size.width / 2, y: 0))
+                    path.addLine(to: CGPoint(x: proxy.size.width / 2, y: proxy.size.height))
+                    path.move(to: CGPoint(x: 0, y: proxy.size.height / 2))
+                    path.addLine(to: CGPoint(x: proxy.size.width, y: proxy.size.height / 2))
+                }
+                .stroke(
+                    Color.accentColor.opacity(0.42),
+                    style: StrokeStyle(lineWidth: 1, dash: [4, 4])
+                )
+                Circle()
+                    .fill(Color.accentColor.opacity(0.72))
+                    .frame(width: 5, height: 5)
+            }
         }
-
-        include(frame)
-        if let referenceFrame { include(referenceFrame) }
-        return CGSize(width: horizontal, height: vertical)
     }
 }
 

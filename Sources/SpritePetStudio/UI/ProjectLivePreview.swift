@@ -5,16 +5,26 @@ import SwiftUI
 struct ProjectLivePreview: NSViewRepresentable {
     let project: PetProjectDefinition
     let store: DocumentStore
+    let atlasContentRevision: UInt64
 
     func makeNSView(context: Context) -> ProjectPreviewSKView {
         let view = ProjectPreviewSKView()
-        view.configure(project: project, store: store)
+        view.configure(
+            project: project,
+            store: store,
+            atlasContentRevision: atlasContentRevision
+        )
         return view
     }
 
     func updateNSView(_ view: ProjectPreviewSKView, context: Context) {
-        if view.projectSignature != project {
-            view.configure(project: project, store: store)
+        if view.projectSignature != project
+            || view.atlasContentRevision != atlasContentRevision {
+            view.configure(
+                project: project,
+                store: store,
+                atlasContentRevision: atlasContentRevision
+            )
         }
     }
 }
@@ -32,6 +42,7 @@ final class ProjectPreviewSKView: SKView {
     private var dragged = false
 
     var projectSignature: PetProjectDefinition? { project }
+    private(set) var atlasContentRevision: UInt64 = 0
     override var isOpaque: Bool { false }
 
     override init(frame frameRect: NSRect) {
@@ -66,8 +77,13 @@ final class ProjectPreviewSKView: SKView {
         }
     }
 
-    func configure(project: PetProjectDefinition, store: DocumentStore) {
+    func configure(
+        project: PetProjectDefinition,
+        store: DocumentStore,
+        atlasContentRevision: UInt64
+    ) {
         self.project = project
+        self.atlasContentRevision = atlasContentRevision
         do {
             let atlas = try TextureAtlas(imageURL: store.imageURL(for: project), project: project)
             petScene.configure(project: project, atlas: atlas)

@@ -87,6 +87,7 @@
       "name": "常态（6 帧 + 中立帧）",
       "playback": "loop",
       "priority": 0,
+      "repeatCount": 1,
       "triggers": [
         {
           "cooldownSeconds": 0,
@@ -130,8 +131,7 @@
           "randomWeight": 1,
           "stringValue": "idle"
         }
-      ],
-      "repeatCount": 1
+      ]
     },
     {
       "frames": [
@@ -231,6 +231,7 @@
       "name": "向右跑",
       "playback": "loop",
       "priority": 70,
+      "repeatCount": 1,
       "triggers": [
         {
           "cooldownSeconds": 0,
@@ -246,8 +247,7 @@
           "randomWeight": 1,
           "stringValue": ""
         }
-      ],
-      "repeatCount": 1
+      ]
     },
     {
       "frames": [
@@ -347,6 +347,7 @@
       "name": "向左跑",
       "playback": "loop",
       "priority": 70,
+      "repeatCount": 1,
       "triggers": [
         {
           "cooldownSeconds": 0,
@@ -362,8 +363,7 @@
           "randomWeight": 1,
           "stringValue": ""
         }
-      ],
-      "repeatCount": 1
+      ]
     },
     {
       "frames": [
@@ -419,6 +419,7 @@
       "name": "挥手",
       "playback": "once",
       "priority": 60,
+      "repeatCount": 1,
       "triggers": [
         {
           "cooldownSeconds": 0.5,
@@ -448,8 +449,7 @@
           "randomWeight": 1,
           "stringValue": ""
         }
-      ],
-      "repeatCount": 1
+      ]
     },
     {
       "frames": [
@@ -516,6 +516,7 @@
       "name": "跳跃 / 悬浮动作",
       "playback": "once",
       "priority": 85,
+      "repeatCount": 1,
       "triggers": [
         {
           "cooldownSeconds": 1.5,
@@ -545,8 +546,7 @@
           "randomWeight": 1,
           "stringValue": ""
         }
-      ],
-      "repeatCount": 1
+      ]
     },
     {
       "frames": [
@@ -646,6 +646,7 @@
       "name": "失败",
       "playback": "once",
       "priority": 90,
+      "repeatCount": 1,
       "triggers": [
         {
           "cooldownSeconds": 1,
@@ -661,8 +662,7 @@
           "randomWeight": 1,
           "stringValue": "failed"
         }
-      ],
-      "repeatCount": 1
+      ]
     },
     {
       "frames": [
@@ -738,8 +738,9 @@
       "interruption": "higherPriority",
       "isEnabled": true,
       "name": "等待",
-      "playback": "loop",
+      "playback": "once",
       "priority": 20,
+      "repeatCount": 1,
       "triggers": [
         {
           "cooldownSeconds": 60,
@@ -755,8 +756,7 @@
           "randomWeight": 0.6,
           "stringValue": ""
         }
-      ],
-      "repeatCount": 1
+      ]
     },
     {
       "frames": [
@@ -832,8 +832,9 @@
       "interruption": "higherPriority",
       "isEnabled": true,
       "name": "执行任务",
-      "playback": "loop",
+      "playback": "once",
       "priority": 55,
+      "repeatCount": 1,
       "triggers": [
         {
           "cooldownSeconds": 60,
@@ -849,8 +850,7 @@
           "randomWeight": 0.6,
           "stringValue": "task-running"
         }
-      ],
-      "repeatCount": 1
+      ]
     },
     {
       "frames": [
@@ -928,6 +928,7 @@
       "name": "检查结果",
       "playback": "once",
       "priority": 65,
+      "repeatCount": 1,
       "triggers": [
         {
           "cooldownSeconds": 1,
@@ -956,9 +957,22 @@
           "minute": 0,
           "randomWeight": 1,
           "stringValue": "review"
+        },
+        {
+          "cooldownSeconds": 1,
+          "distance": 160,
+          "hour": 12,
+          "id": "08DCF017-E7F2-4B3A-A0AC-502ABA2AE2A6",
+          "idleSeconds": 30,
+          "isEnabled": true,
+          "kind": "random",
+          "maximumIntervalSeconds": 90,
+          "minimumIntervalSeconds": 45,
+          "minute": 0,
+          "randomWeight": 0.6,
+          "stringValue": ""
         }
-      ],
-      "repeatCount": 1
+      ]
     },
     {
       "frames": [
@@ -1162,6 +1176,7 @@
       "name": "16 方向视线跟随",
       "playback": "angleControlled",
       "priority": 10,
+      "repeatCount": 1,
       "triggers": [
         {
           "cooldownSeconds": 0,
@@ -1178,8 +1193,7 @@
           "randomWeight": 1,
           "stringValue": ""
         }
-      ],
-      "repeatCount": 1
+      ]
     }
   ],
   "atlas": {
@@ -1187,14 +1201,89 @@
     "cellWidth": 192,
     "columns": 8,
     "filtering": "linear",
-    "imagePath": "builtin://BuiltinProjects/little-naruto/spritesheet.png",
+    "imagePath": "builtin://BuiltinProjects/dimoo-heartfelt-mix/spritesheet.png",
     "rows": 11
   },
+  "atlasConfiguration": {
+    "actions": [
+      {
+        "frameCount": 7,
+        "key": "idle",
+        "name": "常态（6 帧 + 中立帧）",
+        "occupiedRows": 1
+      },
+      {
+        "frameCount": 8,
+        "key": "running-right",
+        "name": "向右跑",
+        "occupiedRows": 1
+      },
+      {
+        "frameCount": 8,
+        "key": "running-left",
+        "name": "向左跑",
+        "occupiedRows": 1
+      },
+      {
+        "frameCount": 4,
+        "key": "waving",
+        "name": "挥手",
+        "occupiedRows": 1
+      },
+      {
+        "frameCount": 5,
+        "key": "jumping",
+        "name": "跳跃 / 悬浮动作",
+        "occupiedRows": 1
+      },
+      {
+        "frameCount": 8,
+        "key": "failed",
+        "name": "失败",
+        "occupiedRows": 1
+      },
+      {
+        "frameCount": 6,
+        "key": "waiting",
+        "name": "等待",
+        "occupiedRows": 1
+      },
+      {
+        "frameCount": 6,
+        "key": "running",
+        "name": "执行任务",
+        "occupiedRows": 1
+      },
+      {
+        "frameCount": 6,
+        "key": "review",
+        "name": "检查结果",
+        "occupiedRows": 1
+      },
+      {
+        "frameCount": 16,
+        "key": "look-around",
+        "name": "16 方向视线跟随",
+        "occupiedRows": 2
+      }
+    ],
+    "cellHeight": 208,
+    "cellWidth": 192,
+    "compatibility": "codexV2",
+    "configurationDescription": "Codex 桌宠的标准 8 × 11 图集协议。",
+    "id": "codex-v2",
+    "isBuiltIn": true,
+    "name": "Codex v2 固定图集"
+  },
   "author": "herbit",
+  "configurationLibraryID": "codex-v2",
   "defaultActionID": "idle",
+  "desktopOriginX": null,
+  "desktopOriginY": null,
   "formatVersion": 2,
-  "id": "little-naruto-v5",
+  "id": "dimoo-heartfelt-mix",
   "isBuiltIn": true,
-  "name": "NARUTO 小鸣人",
+  "isVisibleOnDesktop": true,
+  "name": "DIMOO 心动特调",
   "projectDescription": "默认配置"
 }

@@ -3,15 +3,15 @@ import Foundation
 
 final class DocumentStore {
     enum StoreError: LocalizedError {
-        case bundledProjectMissing
+        case bundledProjectMissing(String)
         case projectImageMissing(String)
         case invalidCodexManifest(String)
         case invalidAtlas(width: Int, height: Int, expectedWidth: Int, expectedHeight: Int)
 
         var errorDescription: String? {
             switch self {
-            case .bundledProjectMissing:
-                return "找不到内置的小鸣人工程。"
+            case .bundledProjectMissing(let name):
+                return "找不到内置工程：\(name)。"
             case .projectImageMissing(let path):
                 return "工程图集不存在：\(path)"
             case .invalidCodexManifest(let reason):
@@ -37,6 +37,7 @@ final class DocumentStore {
     }
 
     func load() throws -> AppDocument {
+        let bundledProjects = try bundledProjects()
         if FileManager.default.fileExists(atPath: stateURL.path) {
             let data = try Data(contentsOf: stateURL)
             var document = try JSONDecoder.spritePet.decode(AppDocument.self, from: data)
@@ -59,12 +60,23 @@ final class DocumentStore {
                     document.projects[index].configurationLibraryID = CodexV2Schema.configuration.id
                 }
             }
+            for bundledProject in bundledProjects {
+                if let index = document.projects.firstIndex(where: { $0.id == bundledProject.id }) {
+                    // Keep the user's current frame/action edits when upgrading an existing
+                    // installation, but reserve bundled project IDs for the built-in samples.
+                    document.projects[index].name = bundledProject.name
+                    document.projects[index].projectDescription = bundledProject.projectDescription
+                    document.projects[index].isBuiltIn = true
+                } else {
+                    document.projects.append(bundledProject)
+                }
+            }
             return document
         }
         return AppDocument(
-            selectedProjectID: try bundledNaruto().id,
+            selectedProjectID: bundledProjects[0].id,
             general: GeneralSettings(),
-            projects: [try bundledNaruto()]
+            projects: bundledProjects
         )
     }
 
@@ -75,12 +87,33 @@ final class DocumentStore {
     }
 
     func bundledNaruto() throws -> PetProjectDefinition {
+        try bundledProject(
+            folder: "little-naruto",
+            displayName: "NARUTO 小鸣人"
+        )
+    }
+
+    func bundledDimoo() throws -> PetProjectDefinition {
+        try bundledProject(
+            folder: "dimoo-heartfelt-mix",
+            displayName: "DIMOO 心动特调"
+        )
+    }
+
+    func bundledProjects() throws -> [PetProjectDefinition] {
+        [try bundledNaruto(), try bundledDimoo()]
+    }
+
+    private func bundledProject(
+        folder: String,
+        displayName: String
+    ) throws -> PetProjectDefinition {
         guard let url = Bundle.module.url(
             forResource: "project",
             withExtension: "json",
-            subdirectory: "BuiltinProjects/little-naruto"
+            subdirectory: "BuiltinProjects/\(folder)"
         ) else {
-            throw StoreError.bundledProjectMissing
+            throw StoreError.bundledProjectMissing(displayName)
         }
         let data = try Data(contentsOf: url)
         let source = try JSONDecoder.spritePet.decode(PetProjectDefinition.self, from: data)
@@ -170,8 +203,8 @@ final class DocumentStore {
         NSColor.clear.setFill()
         NSRect(origin: .zero, size: cellSize).fill()
         let scaledSize = NSSize(
-            width: cellSize.width * CGFloat(frame.scale),
-            height: cellSize.height * CGFloat(frame.scale)
+            width: cellSize.width * CGFloat(frame.scale * frame.scaleX),
+            height: cellSize.height * CGFloat(frame.scale * frame.scaleY)
         )
         let destination = NSRect(
             x: (cellSize.width - scaledSize.width) / 2 + CGFloat(frame.offsetX),
@@ -191,6 +224,20 @@ final class DocumentStore {
     }
 
     func bakeAllFrameTransforms(in project: PetProjectDefinition) throws -> String {
+        try bakeFrameTransforms(in: project, frameIDs: nil)
+    }
+
+    func bakeFrameTransforms(
+        in project: PetProjectDefinition,
+        frameIDs: Set<UUID>
+    ) throws -> String {
+        try bakeFrameTransforms(in: project, frameIDs: Optional(frameIDs))
+    }
+
+    private func bakeFrameTransforms(
+        in project: PetProjectDefinition,
+        frameIDs: Set<UUID>?
+    ) throws -> String {
         guard let atlas = NSImage(contentsOf: try imageURL(for: project)) else {
             throw StoreError.projectImageMissing(project.atlas.imagePath)
         }
@@ -221,9 +268,12 @@ final class DocumentStore {
         let transformedFrames = project.actions
             .flatMap(\.frames)
             .filter { frame in
-                abs(frame.scale - 1) > 0.0001
+                (frameIDs == nil || frameIDs?.contains(frame.id) == true)
+                    && (abs(frame.scale - 1) > 0.0001
+                    || abs(frame.scaleX - 1) > 0.0001
+                    || abs(frame.scaleY - 1) > 0.0001
                     || abs(frame.offsetX) > 0.0001
-                    || abs(frame.offsetY) > 0.0001
+                    || abs(frame.offsetY) > 0.0001)
             }
 
         for frame in transformedFrames {
@@ -235,8 +285,8 @@ final class DocumentStore {
             )
             let cellRect = sourceRect
             let scaledSize = NSSize(
-                width: cellRect.width * CGFloat(frame.scale),
-                height: cellRect.height * CGFloat(frame.scale)
+                width: cellRect.width * CGFloat(frame.scale * frame.scaleX),
+                height: cellRect.height * CGFloat(frame.scale * frame.scaleY)
             )
             let destination = NSRect(
                 x: cellRect.midX - scaledSize.width / 2 + CGFloat(frame.offsetX),
