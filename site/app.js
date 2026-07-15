@@ -370,7 +370,7 @@ const updateRelease = async () => {
     const release = await response.json();
     const archive = release.assets?.find((asset) => asset.name === "SpritePetStudio-macOS.zip");
     document.querySelectorAll("[data-version]").forEach((node) => {
-      node.textContent = release.tag_name || "v0.5.1";
+      node.textContent = release.tag_name || "v0.5.2";
     });
     if (archive?.browser_download_url) {
       document.querySelectorAll("[data-release-download]").forEach((link) => {

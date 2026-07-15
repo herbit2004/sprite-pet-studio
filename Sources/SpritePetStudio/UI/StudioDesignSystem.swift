@@ -142,8 +142,19 @@ struct StudioPill: View {
 }
 
 struct StudioPageBackground: View {
+    @Environment(\.colorScheme) private var colorScheme
+
     var body: some View {
-        Color(nsColor: .windowBackgroundColor)
+        Group {
+            if colorScheme == .dark {
+                Color(red: 0.075, green: 0.078, blue: 0.085)
+            } else {
+                // Keep the canvas consistently airy across macOS versions.
+                // `windowBackgroundColor` can resolve to a noticeably darker
+                // gray depending on the active system material.
+                Color(red: 0.973, green: 0.976, blue: 0.984)
+            }
+        }
         .ignoresSafeArea()
     }
 }
