@@ -814,6 +814,7 @@ final class AppModel: ObservableObject {
             )
             if isNewSession && postLaunchForNewSessions {
                 bus.post(.simple(.appLaunch, projectID: project.id))
+                systemMonitor.sampleMousePosition(projectID: project.id)
             }
         }
     }

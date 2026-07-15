@@ -148,6 +148,43 @@ struct StudioPageBackground: View {
     }
 }
 
+/// A visually continuous slider that still persists values using a fixed step.
+/// Omitting SwiftUI's native `step` argument avoids macOS drawing hundreds of
+/// tick marks as a dark dotted line beneath the track.
+struct StudioSlider: View {
+    @Binding var value: Double
+    let bounds: ClosedRange<Double>
+    let step: Double
+
+    init(
+        value: Binding<Double>,
+        in bounds: ClosedRange<Double>,
+        step: Double
+    ) {
+        _value = value
+        self.bounds = bounds
+        self.step = step
+    }
+
+    var body: some View {
+        Slider(value: quantizedValue, in: bounds)
+    }
+
+    private var quantizedValue: Binding<Double> {
+        Binding(
+            get: { value },
+            set: { newValue in
+                let safeStep = max(step, .ulpOfOne)
+                let steps = ((newValue - bounds.lowerBound) / safeStep).rounded()
+                value = min(
+                    bounds.upperBound,
+                    max(bounds.lowerBound, bounds.lowerBound + steps * safeStep)
+                )
+            }
+        )
+    }
+}
+
 struct StudioPrimaryButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
 

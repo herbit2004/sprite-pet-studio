@@ -92,6 +92,7 @@ final class SystemEventMonitor {
         })
 
         bus.post(.simple(.appLaunch))
+        sampleMousePosition()
     }
 
     func stop() {
@@ -112,6 +113,18 @@ final class SystemEventMonitor {
         lastPetInteraction = Date()
     }
 
+    /// Sends a real mouse-position sample immediately instead of waiting for
+    /// the first polling interval. A project target keeps newly created pet
+    /// sessions from retriggering mouse rules in every other visible project.
+    func sampleMousePosition(projectID: String? = nil) {
+        let mouse = NSEvent.mouseLocation
+        mousePassThroughUpdater?(mouse)
+
+        var event = PetEvent(type: .mouseMoved, point: mouse, projectID: projectID)
+        event.idleSeconds = Date().timeIntervalSince(lastPetInteraction)
+        bus.post(event)
+    }
+
     private func restartTimer() {
         timer?.invalidate()
         let rate = max(5, min(mousePollingRate, 120))
@@ -123,12 +136,7 @@ final class SystemEventMonitor {
     }
 
     private func poll() {
-        let mouse = NSEvent.mouseLocation
-        mousePassThroughUpdater?(mouse)
-
-        var event = PetEvent(type: .mouseMoved, point: mouse)
-        event.idleSeconds = Date().timeIntervalSince(lastPetInteraction)
-        bus.post(event)
+        sampleMousePosition()
 
         // Slower event work is still carried by the same event; the trigger engine
         // performs its own per-rule deadlines and cooldowns.

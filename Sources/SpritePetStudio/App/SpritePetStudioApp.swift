@@ -20,12 +20,36 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         model.start()
     }
 
+    func applicationDockMenu(_ sender: NSApplication) -> NSMenu? {
+        let menu = NSMenu(title: "桌宠工坊")
+        let settingsItem = NSMenuItem(
+            title: "打开设置…",
+            action: #selector(openSettingsFromDock),
+            keyEquivalent: ""
+        )
+        settingsItem.target = self
+        menu.addItem(settingsItem)
+        return menu
+    }
+
+    func applicationShouldHandleReopen(
+        _ sender: NSApplication,
+        hasVisibleWindows flag: Bool
+    ) -> Bool {
+        model.openSettings()
+        return true
+    }
+
     func applicationWillTerminate(_ notification: Notification) {
         model.stop()
         NSAppleEventManager.shared().removeEventHandler(
             forEventClass: AEEventClass(kInternetEventClass),
             andEventID: AEEventID(kAEGetURL)
         )
+    }
+
+    @objc private func openSettingsFromDock() {
+        model.openSettings()
     }
 
     @objc private func handleGetURLEvent(_ event: NSAppleEventDescriptor, withReplyEvent: NSAppleEventDescriptor) {

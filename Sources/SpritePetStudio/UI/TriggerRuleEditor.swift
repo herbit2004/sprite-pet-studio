@@ -15,19 +15,13 @@ struct TriggerRuleEditor: View {
                 }
                 .frame(width: 190)
                 Spacer()
-                if rule.kind != .mouseLook {
-                    LabeledContent("冷却") {
-                        TextField("秒", value: $rule.cooldownSeconds, format: .number)
-                            .frame(width: 52)
-                        Text("秒")
-                    }
-                }
                 Button(role: .destructive, action: remove) {
                     Image(systemName: "trash")
                 }
                 .buttonStyle(.borderless)
             }
 
+            timingParameters
             parameters
 
             Text(rule.kind.helpText)
@@ -39,6 +33,29 @@ struct TriggerRuleEditor: View {
         .overlay {
             RoundedRectangle(cornerRadius: 12)
                 .stroke(Color.secondary.opacity(0.12))
+        }
+    }
+
+    @ViewBuilder
+    private var timingParameters: some View {
+        if rule.kind.supportsDelay || rule.kind != .mouseLook {
+            HStack(spacing: 20) {
+                if rule.kind.supportsDelay {
+                    LabeledContent("触发延迟") {
+                        TextField("秒", value: delayBinding, format: .number)
+                            .frame(width: 58)
+                        Text("秒")
+                    }
+                }
+                if rule.kind != .mouseLook {
+                    LabeledContent("冷却时间") {
+                        TextField("秒", value: $rule.cooldownSeconds, format: .number)
+                            .frame(width: 58)
+                        Text("秒")
+                    }
+                }
+                Spacer()
+            }
         }
     }
 
@@ -97,6 +114,13 @@ struct TriggerRuleEditor: View {
         Binding(
             get: { rule.distanceCondition ?? .inside },
             set: { rule.distanceCondition = $0 }
+        )
+    }
+
+    private var delayBinding: Binding<Double> {
+        Binding(
+            get: { rule.delaySeconds },
+            set: { rule.delaySeconds = min(86_400, max(0, $0)) }
         )
     }
 }

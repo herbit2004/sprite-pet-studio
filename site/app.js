@@ -17,7 +17,7 @@ const translations = {
     backToProduct: "Product",
     heroEyebrow: "Native macOS · Open-source pet studio",
     heroTitle: "Bring characters<br /><em>to life on your desktop.</em>",
-    heroLede: "Start with NARUTO 小鸣人 and DIMOO Heartfelt Mix as pristine templates. Run them immediately, or duplicate either one into a private project you can edit frame by frame.",
+    heroLede: "Start with the newly refined NARUTO 小鸣人 and DIMOO Heartfelt Mix as pristine templates. Run them immediately, or duplicate either one into a private project you can edit frame by frame.",
     downloadMac: "Download for macOS",
     viewSource: "View source",
     appInfo: "Application information",
@@ -51,7 +51,7 @@ const translations = {
     normalize: "Normalize",
     eventEngine: "Event engine",
     eventTitle: "Give every motion a reason to happen.",
-    eventDesc: "Mouse distance, clicks, dragging, idle time, randomness, timers, and system events can all start an animation.",
+    eventDesc: "Mouse distance, clicks, idle time, randomness, timers, and system events can start an animation immediately or after a per-trigger delay.",
     pet: "PET",
     mouse: "mouse",
     idle: "idle",
@@ -67,7 +67,7 @@ const translations = {
     importTitle: "Import a project",
     importDesc: "Choose <code>pet.json</code>. The app loads the atlas and Studio configuration beside it.",
     composeTitle: "Compose animations",
-    composeDesc: "Tune frames, set repeat counts and priorities, then choose an event trigger for each animation.",
+    composeDesc: "Tune frames, set repeat counts and priorities, then choose a trigger and optional delay for each animation.",
     desktopTitle: "Bring it to the desktop",
     desktopDesc: "Turn on project visibility. Every pet runs, moves, and responds to events independently.",
     formatIndex: "03 / Project format",
@@ -160,7 +160,7 @@ const translations = {
     backToProduct: "产品页",
     heroEyebrow: "原生 macOS · 开源桌宠工作台",
     heroTitle: "让角色真正<br /><em>活在桌面上。</em>",
-    heroLede: "下载后即可运行 NARUTO 小鸣人与 DIMOO 心动特调两个只读模板。复制任意模板，就能得到可逐帧编辑、完全独立的个人工程。",
+    heroLede: "下载后即可运行重新调校的 NARUTO 小鸣人与 DIMOO 心动特调两个只读模板。复制任意模板，就能得到可逐帧编辑、完全独立的个人工程。",
     downloadMac: "下载 macOS 版",
     viewSource: "查看源码",
     appInfo: "应用信息",
@@ -194,7 +194,7 @@ const translations = {
     normalize: "归一化",
     eventEngine: "事件引擎",
     eventTitle: "让动作有触发的理由。",
-    eventDesc: "鼠标距离、点击、拖动、空闲、随机、定时与系统事件，都可以成为一套动作的开场。",
+    eventDesc: "鼠标距离、点击、空闲、随机、定时与系统事件，都可以立即触发动作，或按每条规则的延迟播放。",
     pet: "桌宠",
     mouse: "鼠标",
     idle: "空闲",
@@ -210,7 +210,7 @@ const translations = {
     importTitle: "导入工程",
     importDesc: "选择 <code>pet.json</code>，应用读取同目录的大图集和 Studio 配置。",
     composeTitle: "编排动作",
-    composeDesc: "逐帧微调，设置播放次数与优先级，再为动作选择触发事件。",
+    composeDesc: "逐帧微调，设置播放次数与优先级，再为动作选择触发事件和可选延迟。",
     desktopTitle: "放到桌面",
     desktopDesc: "开启工程显示；每只桌宠独立运行、移动并响应自己的事件。",
     formatIndex: "03 / 工程格式",
@@ -370,7 +370,7 @@ const updateRelease = async () => {
     const release = await response.json();
     const archive = release.assets?.find((asset) => asset.name === "SpritePetStudio-macOS.zip");
     document.querySelectorAll("[data-version]").forEach((node) => {
-      node.textContent = release.tag_name || "v0.4.0";
+      node.textContent = release.tag_name || "v0.5.0";
     });
     if (archive?.browser_download_url) {
       document.querySelectorAll("[data-release-download]").forEach((link) => {

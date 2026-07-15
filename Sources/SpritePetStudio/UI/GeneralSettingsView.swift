@@ -24,7 +24,11 @@ struct GeneralSettingsView: View {
                         Toggle("始终置顶", isOn: model.bindingForGeneral(\.alwaysOnTop))
                         LabeledContent("显示尺寸") {
                             HStack {
-                                Slider(value: model.bindingForGeneral(\.petScale), in: 0.35...1.6, step: 0.01)
+                                StudioSlider(
+                                    value: model.bindingForGeneral(\.petScale),
+                                    in: 0.35...1.6,
+                                    step: 0.01
+                                )
                                     .frame(width: 300)
                                 Text("\(Int(model.document.general.petScale * 100))%")
                                     .monospacedDigit()
@@ -33,6 +37,7 @@ struct GeneralSettingsView: View {
                         }
                         Button("将所有可见桌宠错开移回主屏幕右下角") { model.resetWindowPosition() }
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
 
                 StudioCard {
@@ -52,6 +57,7 @@ struct GeneralSettingsView: View {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
 
                 StudioCard {
@@ -66,9 +72,11 @@ struct GeneralSettingsView: View {
                             .foregroundStyle(.secondary)
                         Button("打开用户工程与配置目录") { model.openProjectFolder() }
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
             .padding(StudioTheme.pagePadding)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
@@ -97,7 +105,7 @@ struct GeneralSettingsView: View {
                             systemImage: "arrow.clockwise"
                         )
                     }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(StudioPrimaryButtonStyle())
                     .disabled(model.updateCheckState == .checking)
 
                     if case .updateAvailable(let published) = model.updateCheckState {
@@ -110,6 +118,7 @@ struct GeneralSettingsView: View {
                     }
                 }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 

@@ -7,7 +7,7 @@ struct EventCatalogView: View {
                 StudioPageHeader(
                     eyebrow: "Automation",
                     title: "统一事件接口",
-                    subtitle: "任意动作都能绑定一个或多个事件；普通鼠标交互不需要辅助功能或屏幕录制权限。"
+                    subtitle: "任意动作都能绑定一个或多个事件；离散事件可设置触发延迟，普通鼠标交互不需要额外权限。"
                 )
 
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 245), alignment: .top)], spacing: 12) {

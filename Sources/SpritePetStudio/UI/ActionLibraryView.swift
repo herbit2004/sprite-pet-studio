@@ -263,7 +263,7 @@ private struct ActionEditorView: View {
                 GridRow {
                     Text("基础速度")
                     HStack {
-                        Slider(value: $action.framesPerSecond, in: 1...60, step: 1)
+                        StudioSlider(value: $action.framesPerSecond, in: 1...60, step: 1)
                         Text("\(Int(action.framesPerSecond)) FPS")
                             .monospacedDigit()
                             .frame(width: 58)
@@ -517,21 +517,21 @@ private struct SelectedFrameEditor: View {
             GroupBox("这一帧的大小与位置") {
                 VStack(alignment: .leading, spacing: 10) {
                     LabeledContent("整体缩放") {
-                        Slider(value: $frame.scale, in: 0.25...2, step: 0.01)
+                        StudioSlider(value: $frame.scale, in: 0.25...2, step: 0.01)
                             .frame(maxWidth: 210)
                         Text("\(Int(frame.scale * 100))%")
                             .monospacedDigit()
                             .frame(width: 46, alignment: .trailing)
                     }
                     LabeledContent("横向缩放") {
-                        Slider(value: $frame.scaleX, in: 0.25...2, step: 0.01)
+                        StudioSlider(value: $frame.scaleX, in: 0.25...2, step: 0.01)
                             .frame(maxWidth: 210)
                         Text("\(Int(frame.scaleX * 100))%")
                             .monospacedDigit()
                             .frame(width: 46, alignment: .trailing)
                     }
                     LabeledContent("纵向缩放") {
-                        Slider(value: $frame.scaleY, in: 0.25...2, step: 0.01)
+                        StudioSlider(value: $frame.scaleY, in: 0.25...2, step: 0.01)
                             .frame(maxWidth: 210)
                         Text("\(Int(frame.scaleY * 100))%")
                             .monospacedDigit()
@@ -574,7 +574,7 @@ private struct SelectedFrameEditor: View {
             GroupBox("这一帧的停留时间") {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
-                        Slider(value: $frame.durationMultiplier, in: 0.1...8, step: 0.05)
+                        StudioSlider(value: $frame.durationMultiplier, in: 0.1...8, step: 0.05)
                         Text("× \(frame.durationMultiplier, format: .number.precision(.fractionLength(2)))")
                             .monospacedDigit()
                             .frame(width: 58)

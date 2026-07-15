@@ -10,6 +10,7 @@ final class TriggerEngine {
     private var mouseInsideRules: [UUID: Bool] = [:]
     private var idleRulesHaveFired: Set<UUID> = []
     private var scheduledFireKeys: [UUID: String] = [:]
+    private var delayedFires: [UUID: Task<Void, Never>] = [:]
     private var lastTimerEvaluation = Date.distantPast
     private var angleActionID: String?
     private var isDragging = false
@@ -34,9 +35,11 @@ final class TriggerEngine {
     func stop() {
         if let subscription { bus.unsubscribe(subscription) }
         subscription = nil
+        cancelDelayedFires()
     }
 
     func reset() {
+        cancelDelayedFires()
         randomDeadlines.removeAll()
         cooldowns.removeAll()
         mouseInsideRules.removeAll()
@@ -122,7 +125,48 @@ final class TriggerEngine {
             isDragEvent = false
         }
         let restart = event.type != .dragLeft && event.type != .dragRight
-        playAction?(chosen.0, restart, isDragEvent)
+        schedulePlayback(
+            action: chosen.0,
+            rule: chosen.1,
+            restart: restart,
+            force: isDragEvent
+        )
+    }
+
+    private func schedulePlayback(
+        action: PetActionDefinition,
+        rule: TriggerRule,
+        restart: Bool,
+        force: Bool
+    ) {
+        delayedFires[rule.id]?.cancel()
+        delayedFires.removeValue(forKey: rule.id)
+
+        let delay = rule.kind.supportsDelay ? min(86_400, max(0, rule.delaySeconds)) : 0
+        guard delay > 0 else {
+            playAction?(action, restart, force)
+            return
+        }
+
+        let ruleID = rule.id
+        let actionID = action.id
+        let nanoseconds = UInt64(delay * 1_000_000_000)
+        delayedFires[ruleID] = Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: nanoseconds)
+            guard !Task.isCancelled, let self else { return }
+            delayedFires.removeValue(forKey: ruleID)
+            guard let currentAction = projectProvider?()?.actions.first(where: {
+                $0.id == actionID && $0.isEnabled
+            }) else { return }
+            playAction?(currentAction, restart, force)
+        }
+    }
+
+    private func cancelDelayedFires() {
+        for task in delayedFires.values {
+            task.cancel()
+        }
+        delayedFires.removeAll()
     }
 
     private func matches(_ rule: TriggerRule, event: PetEvent) -> Bool {

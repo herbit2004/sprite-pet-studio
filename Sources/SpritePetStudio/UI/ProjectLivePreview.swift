@@ -36,6 +36,7 @@ final class ProjectPreviewSKView: SKView {
     private var timer: Timer?
     private var trackingAreaReference: NSTrackingArea?
     private var randomDeadlines: [UUID: Date] = [:]
+    private var delayedFires: [UUID: Task<Void, Never>] = [:]
     private var idleStartedAt = Date()
     private var mouseRuleStates: [UUID: Bool] = [:]
     private var mouseDownPoint: CGPoint?
@@ -72,6 +73,7 @@ final class ProjectPreviewSKView: SKView {
         if window == nil {
             timer?.invalidate()
             timer = nil
+            cancelDelayedFires()
         } else if project != nil, timer == nil {
             startTimer()
         }
@@ -93,6 +95,7 @@ final class ProjectPreviewSKView: SKView {
             // stretches the native scene to the card's wide aspect ratio.
             petScene.setViewportSize(bounds.size, fitSprite: true)
             randomDeadlines.removeAll()
+            cancelDelayedFires()
             mouseRuleStates.removeAll()
             idleStartedAt = Date()
             startTimer()
@@ -155,7 +158,9 @@ final class ProjectPreviewSKView: SKView {
                 let matches = distanceMatches(rule, distance: distance)
                 let previous = mouseRuleStates[rule.id] ?? false
                 mouseRuleStates[rule.id] = matches
-                if matches && !previous { petScene.play(action, force: true, restart: true) }
+                if matches && !previous {
+                    schedulePlayback(action: action, rule: rule, restart: true)
+                }
             }
         }
     }
@@ -210,12 +215,12 @@ final class ProjectPreviewSKView: SKView {
                     let deadline = randomDeadlines[rule.id] ?? now.addingTimeInterval(randomInterval(rule))
                     randomDeadlines[rule.id] = deadline
                     if now >= deadline {
-                        petScene.play(action, force: true, restart: true)
+                        schedulePlayback(action: action, rule: rule, restart: true)
                         randomDeadlines[rule.id] = now.addingTimeInterval(randomInterval(rule))
                     }
                 case .idle:
                     if now.timeIntervalSince(idleStartedAt) >= rule.idleSeconds {
-                        petScene.play(action, force: true, restart: true)
+                        schedulePlayback(action: action, rule: rule, restart: true)
                         idleStartedAt = now
                     }
                 default:
@@ -227,11 +232,50 @@ final class ProjectPreviewSKView: SKView {
 
     private func playTrigger(_ kind: TriggerKind, restart: Bool = true) {
         guard let project else { return }
-        let candidates = project.actions.filter { action in
-            action.isEnabled && action.triggers.contains { $0.isEnabled && $0.kind == kind }
+        let candidates: [(PetActionDefinition, TriggerRule)] = project.actions.flatMap { action -> [(PetActionDefinition, TriggerRule)] in
+            guard action.isEnabled else { return [] }
+            return action.triggers
+                .filter { $0.isEnabled && $0.kind == kind }
+                .map { (action, $0) }
         }
-        guard let action = candidates.max(by: { $0.priority < $1.priority }) else { return }
-        petScene.play(action, force: true, restart: restart)
+        guard let chosen = candidates.max(by: { $0.0.priority < $1.0.priority }) else { return }
+        schedulePlayback(action: chosen.0, rule: chosen.1, restart: restart)
+    }
+
+    private func schedulePlayback(
+        action: PetActionDefinition,
+        rule: TriggerRule,
+        restart: Bool
+    ) {
+        delayedFires[rule.id]?.cancel()
+        delayedFires.removeValue(forKey: rule.id)
+
+        let delay = rule.kind.supportsDelay ? min(86_400, max(0, rule.delaySeconds)) : 0
+        guard delay > 0 else {
+            petScene.play(action, force: true, restart: restart)
+            return
+        }
+
+        let ruleID = rule.id
+        let actionID = action.id
+        let nanoseconds = UInt64(delay * 1_000_000_000)
+        delayedFires[ruleID] = Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: nanoseconds)
+            guard !Task.isCancelled,
+                  let self,
+                  let action = project?.actions.first(where: {
+                      $0.id == actionID && $0.isEnabled
+                  }) else { return }
+            delayedFires.removeValue(forKey: ruleID)
+            petScene.play(action, force: true, restart: restart)
+        }
+    }
+
+    private func cancelDelayedFires() {
+        for task in delayedFires.values {
+            task.cancel()
+        }
+        delayedFires.removeAll()
     }
 
     private func distanceMatches(_ rule: TriggerRule, distance: Double) -> Bool {

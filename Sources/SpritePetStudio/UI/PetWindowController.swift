@@ -47,7 +47,7 @@ final class PetWindowController {
         skView.layer?.backgroundColor = NSColor.clear.cgColor
         skView.layer?.borderWidth = 0
         skView.layer?.masksToBounds = true
-        skView.alphaValue = 0
+        skView.alphaValue = 1
         skView.autoresizingMask = [.width, .height]
         skView.allowsTransparency = true
         skView.ignoresSiblingOrder = true
@@ -56,9 +56,6 @@ final class PetWindowController {
         skView.presentScene(scene)
         scene.onActionFinished = { [weak scene] _ in
             scene?.returnToDefault()
-        }
-        scene.onFirstFrameRendered = { [weak skView] in
-            skView?.alphaValue = 1
         }
     }
 
@@ -70,7 +67,6 @@ final class PetWindowController {
         let projectChanged = currentProject != project
         currentProject = project
         if projectChanged {
-            skView.alphaValue = 0
             let atlas = try TextureAtlas(
                 imageURL: store.imageURL(for: project),
                 project: project
@@ -117,7 +113,6 @@ final class PetWindowController {
 
     func reloadProject(_ project: PetProjectDefinition) throws {
         currentProject = project
-        skView.alphaValue = 0
         let atlas = try TextureAtlas(
             imageURL: store.imageURL(for: project),
             project: project

@@ -12,7 +12,18 @@ struct WorkspaceStoreSmoke {
         precondition(document.projects.count == 2)
         precondition(document.projects.allSatisfy(\.isReadOnlyTemplate))
         precondition(document.projects.allSatisfy { $0.atlas.imagePath.hasPrefix("builtin://") })
+        precondition(document.projects.allSatisfy { project in
+            project.actions.allSatisfy { action in
+                action.triggers.allSatisfy { $0.delaySeconds == 0 }
+            }
+        })
         try assertTemplateRuntimeParametersMatch(document.projects)
+
+        var delayedProject = document.projects[0]
+        delayedProject.actions[0].triggers[0].delaySeconds = 1.25
+        let delayedData = try JSONEncoder().encode(delayedProject)
+        let delayedRoundTrip = try JSONDecoder().decode(PetProjectDefinition.self, from: delayedData)
+        precondition(delayedRoundTrip.actions[0].triggers[0].delaySeconds == 1.25)
 
         let template = document.projects[0]
         do {

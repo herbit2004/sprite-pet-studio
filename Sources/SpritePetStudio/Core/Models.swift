@@ -351,12 +351,24 @@ enum TriggerKind: String, Codable, CaseIterable, Identifiable {
         default: return "由对应的桌面或系统事件触发。"
         }
     }
+
+    /// Continuous drag and look controls must react to every live input sample.
+    /// The remaining discrete triggers can safely schedule a delayed playback.
+    var supportsDelay: Bool {
+        switch self {
+        case .mouseLook, .dragStart, .dragLeft, .dragRight, .dragEnd:
+            return false
+        default:
+            return true
+        }
+    }
 }
 
 struct TriggerRule: Codable, Identifiable, Equatable {
     var id: UUID = UUID()
     var kind: TriggerKind
     var isEnabled: Bool = true
+    var delaySeconds: Double = 0
     var cooldownSeconds: Double = 0
     var minimumIntervalSeconds: Double = 15
     var maximumIntervalSeconds: Double = 45
@@ -367,6 +379,64 @@ struct TriggerRule: Codable, Identifiable, Equatable {
     var stringValue: String = ""
     var hour: Int = 12
     var minute: Int = 0
+}
+
+extension TriggerRule {
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case kind
+        case isEnabled
+        case delaySeconds
+        case cooldownSeconds
+        case minimumIntervalSeconds
+        case maximumIntervalSeconds
+        case randomWeight
+        case idleSeconds
+        case distance
+        case distanceCondition
+        case stringValue
+        case hour
+        case minute
+    }
+
+    /// `delaySeconds` was added after the first public project format. Missing
+    /// values decode as zero so existing workspaces and exported Codex projects
+    /// remain directly importable.
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
+        kind = try container.decode(TriggerKind.self, forKey: .kind)
+        isEnabled = try container.decodeIfPresent(Bool.self, forKey: .isEnabled) ?? true
+        delaySeconds = max(0, try container.decodeIfPresent(Double.self, forKey: .delaySeconds) ?? 0)
+        cooldownSeconds = try container.decodeIfPresent(Double.self, forKey: .cooldownSeconds) ?? 0
+        minimumIntervalSeconds = try container.decodeIfPresent(Double.self, forKey: .minimumIntervalSeconds) ?? 15
+        maximumIntervalSeconds = try container.decodeIfPresent(Double.self, forKey: .maximumIntervalSeconds) ?? 45
+        randomWeight = try container.decodeIfPresent(Double.self, forKey: .randomWeight) ?? 1
+        idleSeconds = try container.decodeIfPresent(Double.self, forKey: .idleSeconds) ?? 30
+        distance = try container.decodeIfPresent(Double.self, forKey: .distance) ?? 160
+        distanceCondition = try container.decodeIfPresent(DistanceCondition.self, forKey: .distanceCondition)
+        stringValue = try container.decodeIfPresent(String.self, forKey: .stringValue) ?? ""
+        hour = try container.decodeIfPresent(Int.self, forKey: .hour) ?? 12
+        minute = try container.decodeIfPresent(Int.self, forKey: .minute) ?? 0
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(kind, forKey: .kind)
+        try container.encode(isEnabled, forKey: .isEnabled)
+        try container.encode(delaySeconds, forKey: .delaySeconds)
+        try container.encode(cooldownSeconds, forKey: .cooldownSeconds)
+        try container.encode(minimumIntervalSeconds, forKey: .minimumIntervalSeconds)
+        try container.encode(maximumIntervalSeconds, forKey: .maximumIntervalSeconds)
+        try container.encode(randomWeight, forKey: .randomWeight)
+        try container.encode(idleSeconds, forKey: .idleSeconds)
+        try container.encode(distance, forKey: .distance)
+        try container.encodeIfPresent(distanceCondition, forKey: .distanceCondition)
+        try container.encode(stringValue, forKey: .stringValue)
+        try container.encode(hour, forKey: .hour)
+        try container.encode(minute, forKey: .minute)
+    }
 }
 
 enum DistanceCondition: String, Codable, CaseIterable, Identifiable {
