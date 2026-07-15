@@ -67,6 +67,13 @@ final class AppModel: ObservableObject {
         document.projects.firstIndex { $0.id == document.selectedProjectID }
     }
 
+    func updateProjectMetadata(id: String, name: String, description: String) {
+        guard let index = document.projects.firstIndex(where: { $0.id == id }),
+              !document.projects[index].isReadOnlyTemplate else { return }
+        document.projects[index].name = name
+        document.projects[index].projectDescription = description
+    }
+
     func start() {
         guard !isStarted else { return }
         isStarted = true
@@ -134,6 +141,7 @@ final class AppModel: ObservableObject {
 
     func importFramePNG(actionID: String, frameID: UUID) {
         guard let projectIndex = currentProjectIndex,
+              !document.projects[projectIndex].isReadOnlyTemplate,
               let actionIndex = document.projects[projectIndex].actions.firstIndex(where: { $0.id == actionID }),
               let frameIndex = document.projects[projectIndex].actions[actionIndex].frames.firstIndex(where: { $0.id == frameID }) else { return }
 
@@ -171,6 +179,7 @@ final class AppModel: ObservableObject {
 
     func bakeFrameTransform(actionID: String, frameID: UUID) {
         guard let projectIndex = currentProjectIndex,
+              !document.projects[projectIndex].isReadOnlyTemplate,
               let actionIndex = document.projects[projectIndex].actions.firstIndex(where: { $0.id == actionID }),
               let frameIndex = document.projects[projectIndex].actions[actionIndex].frames.firstIndex(where: { $0.id == frameID }) else { return }
         do {
@@ -191,6 +200,7 @@ final class AppModel: ObservableObject {
 
     func resetFrameTransform(actionID: String, frameID: UUID) {
         guard let projectIndex = currentProjectIndex,
+              !document.projects[projectIndex].isReadOnlyTemplate,
               let actionIndex = document.projects[projectIndex].actions.firstIndex(where: { $0.id == actionID }),
               let frameIndex = document.projects[projectIndex].actions[actionIndex].frames.firstIndex(where: { $0.id == frameID }) else { return }
 
@@ -206,6 +216,7 @@ final class AppModel: ObservableObject {
     func bakeFrameTransforms(actionID: String, frameIDs: Set<UUID>) {
         guard !frameIDs.isEmpty,
               let projectIndex = currentProjectIndex,
+              !document.projects[projectIndex].isReadOnlyTemplate,
               let actionIndex = document.projects[projectIndex].actions.firstIndex(where: { $0.id == actionID }) else { return }
         let selectedFrames = document.projects[projectIndex].actions[actionIndex].frames.filter {
             frameIDs.contains($0.id)
@@ -230,6 +241,7 @@ final class AppModel: ObservableObject {
     func resetFrameTransforms(actionID: String, frameIDs: Set<UUID>) {
         guard !frameIDs.isEmpty,
               let projectIndex = currentProjectIndex,
+              !document.projects[projectIndex].isReadOnlyTemplate,
               let actionIndex = document.projects[projectIndex].actions.firstIndex(where: { $0.id == actionID }) else { return }
         resetFrameTransformsInDocument(
             projectIndex: projectIndex,
@@ -239,7 +251,8 @@ final class AppModel: ObservableObject {
     }
 
     func draftTransformCount(projectID: String) -> Int {
-        guard let project = document.projects.first(where: { $0.id == projectID }) else { return 0 }
+        guard let project = document.projects.first(where: { $0.id == projectID }),
+              !project.isReadOnlyTemplate else { return 0 }
         return project.actions.flatMap(\.frames).filter { frame in
             abs(frame.scale - 1) > 0.0001
                 || abs(frame.scaleX - 1) > 0.0001
@@ -251,6 +264,7 @@ final class AppModel: ObservableObject {
 
     func bakeAllFrameTransforms(projectID: String) {
         guard let projectIndex = document.projects.firstIndex(where: { $0.id == projectID }),
+              !document.projects[projectIndex].isReadOnlyTemplate,
               draftTransformCount(projectID: projectID) > 0 else { return }
         do {
             let project = document.projects[projectIndex]
@@ -273,6 +287,7 @@ final class AppModel: ObservableObject {
 
     func resetAllFrameTransforms(projectID: String) {
         guard let projectIndex = document.projects.firstIndex(where: { $0.id == projectID }),
+              !document.projects[projectIndex].isReadOnlyTemplate,
               draftTransformCount(projectID: projectID) > 0 else { return }
         var project = document.projects[projectIndex]
         for actionIndex in project.actions.indices {
@@ -289,6 +304,7 @@ final class AppModel: ObservableObject {
 
     func bindingForAction(id: String) -> Binding<PetActionDefinition>? {
         guard let projectIndex = currentProjectIndex,
+              !document.projects[projectIndex].isReadOnlyTemplate,
               let actionIndex = document.projects[projectIndex].actions.firstIndex(where: { $0.id == id }) else { return nil }
         return Binding(
             get: { [weak self] in
@@ -298,6 +314,7 @@ final class AppModel: ObservableObject {
             set: { [weak self] newValue in
                 guard let self,
                       self.document.projects.indices.contains(projectIndex),
+                      !self.document.projects[projectIndex].isReadOnlyTemplate,
                       self.document.projects[projectIndex].actions.indices.contains(actionIndex) else { return }
                 self.document.projects[projectIndex].actions[actionIndex] = newValue
             }
@@ -310,7 +327,12 @@ final class AppModel: ObservableObject {
             get: { [weak self] in
                 self?.document.projects[index] ?? self!.document.projects[0]
             },
-            set: { [weak self] in self?.document.projects[index] = $0 }
+            set: { [weak self] newValue in
+                guard let self,
+                      self.document.projects.indices.contains(index),
+                      !self.document.projects[index].isReadOnlyTemplate else { return }
+                self.document.projects[index] = newValue
+            }
         )
     }
 
@@ -318,7 +340,12 @@ final class AppModel: ObservableObject {
         guard let index = document.projects.firstIndex(where: { $0.id == id }) else { return nil }
         return Binding(
             get: { [weak self] in self?.document.projects[index] ?? self!.document.projects[0] },
-            set: { [weak self] in self?.document.projects[index] = $0 }
+            set: { [weak self] newValue in
+                guard let self,
+                      self.document.projects.indices.contains(index),
+                      !self.document.projects[index].isReadOnlyTemplate else { return }
+                self.document.projects[index] = newValue
+            }
         )
     }
 
@@ -353,7 +380,11 @@ final class AppModel: ObservableObject {
         panel.allowsMultipleSelection = false
         guard panel.runModal() == .OK, let url = panel.url else { return }
         do {
-            var project = try store.importProject(from: url)
+            let sourceID = try store.projectIdentifier(in: url)
+            let targetID = document.projects.contains(where: { $0.id == sourceID })
+                ? uniqueProjectID(base: "\(sourceID)-imported")
+                : sourceID
+            var project = try store.importProject(from: url, as: targetID)
             project.isVisibleOnDesktop = false
             project.desktopOriginX = nil
             project.desktopOriginY = nil
@@ -384,10 +415,10 @@ final class AppModel: ObservableObject {
                 case .alertSecondButtonReturn:
                     project.configurationLibraryID = nil
                 default:
+                    try? store.deleteProjectData(project)
                     return
                 }
             }
-            document.projects.removeAll { $0.id == project.id }
             document.projects.append(project)
             document.selectedProjectID = project.id
             resetAllTriggerEngines()
@@ -530,7 +561,9 @@ final class AppModel: ObservableObject {
         }
 
         do {
-            for index in document.projects.indices where document.projects[index].configurationLibraryID == sanitized.id {
+            for index in document.projects.indices
+                where document.projects[index].configurationLibraryID == sanitized.id
+                    && !document.projects[index].isReadOnlyTemplate {
                 document.projects[index] = try store.reconfigureProject(
                     document.projects[index],
                     using: sanitized,

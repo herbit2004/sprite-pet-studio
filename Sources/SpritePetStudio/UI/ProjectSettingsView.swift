@@ -12,7 +12,7 @@ struct ProjectSettingsView: View {
                 Button("导入 Codex 工程…") { model.importProject() }
                 Button("导出 Codex 工程…") { model.exportCurrentProject() }
                 Button("删除") { model.deleteCurrentProject() }
-                    .disabled(model.currentProject?.isBuiltIn != false)
+                    .disabled(model.currentProject?.isReadOnlyTemplate != false)
             }
 
             if let project = model.bindingForCurrentProject() {
@@ -49,6 +49,7 @@ struct ProjectSettingsView: View {
                     }
                 }
                 .formStyle(.grouped)
+                .disabled(project.wrappedValue.isReadOnlyTemplate)
             } else {
                 ContentUnavailableView("没有宠物工程", systemImage: "shippingbox")
             }

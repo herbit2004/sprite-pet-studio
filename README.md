@@ -8,9 +8,16 @@
 
 一个原生 macOS 桌宠运行器与逐帧图集编辑器。它可以同时在桌面上运行多个独立桌宠；每个工程都有自己的图集、动作库、触发器、窗口位置和显示开关。
 
-首次启动即内置 `NARUTO 小鸣人` 与 `DIMOO 心动特调` 两个完整示例工程，并提供与 Codex v2 宠物图集的互通能力。
+首次启动即内置 `NARUTO 小鸣人` 与 `DIMOO 心动特调` 两个只读模板，并提供与 Codex v2 宠物图集的互通能力。模板可以直接在桌面运行，也可以复制为完全独立、可逐帧编辑的个人工程。
 
 > 运行环境：macOS 14（Sonoma）或更新版本；从源码构建需要 Xcode Command Line Tools 与 Swift 5.10 或更新版本。
+
+## v0.3.0 更新
+
+- 内置的 NARUTO 与 DIMOO 改为明确的只读模板：不能改名、编辑动作、归一化或删除，但仍可显示、复制和导出；
+- “复制完整工程”会在用户工作区生成独立的 `pet.json`、`studio.json` 与 `spritesheet.png`，副本开放全部编辑能力；
+- 个人工程以 `Projects/<id>/` 为独立工作副本保存，启动时会从目录重新发现；模板始终从 App 资源包加载，两类工程可以同时出现在工程库；
+- 新增存储冒烟测试并接入 CI，覆盖首次安装、模板只读、复制、重载发现和模板导出。
 
 ## v0.2.1 修复
 
@@ -85,6 +92,9 @@ xcode-select --install
 # 编译 Debug 版本，检查是否可以通过编译
 make build
 
+# 验证首次安装、模板只读、复制与个人工程重载
+make test
+
 # 编译 Release 版本并生成 macOS App
 make app
 
@@ -145,7 +155,7 @@ swift run SpritePetStudio
 
 | 工作流 | 文件 | 触发条件 | 结果 |
 | --- | --- | --- | --- |
-| Build | `.github/workflows/ci.yml` | 推送到 `main`、Pull Request、手动触发 | 在 macOS Runner 上执行 `make build` |
+| Build | `.github/workflows/ci.yml` | 推送到 `main`、Pull Request、手动触发 | 在 macOS Runner 上执行 `make build` 与 `make test` |
 | Release macOS app | `.github/workflows/release.yml` | 推送任意 `v*` Tag、手动触发 | 编译 App，创建或更新 Release，上传 ZIP 和 SHA-256 |
 | Deploy GitHub Pages | `.github/workflows/pages.yml` | `main` 中的 `site/**` 或 Pages 工作流变化、手动触发 | 将 `site/` 部署到 GitHub Pages |
 
@@ -212,7 +222,9 @@ sprite-pet-studio/
 ├── scripts/
 │   ├── build-app.sh                      # Release 构建、装配 App、临时签名
 │   ├── package-release.sh                # 生成 Release ZIP 和 SHA-256
-│   └── install-local.sh                  # 打包后复制到 /Applications
+│   ├── install-local.sh                  # 打包后复制到 /Applications
+│   └── test-workspace.sh                 # 模板与个人工程存储冒烟测试
+├── Tests/WorkspaceStoreSmoke/            # 首次安装、复制、重载与导出验证
 ├── site/                                 # GitHub Pages 静态产品网站
 ├── .github/
 │   ├── workflows/                        # CI、Release 与 Pages 工作流
@@ -234,6 +246,7 @@ sprite-pet-studio/
 - 配置库可定义动作顺序、标签键、帧数、占用排数和单格尺寸；图集网格自动计算
 - 内置只读 Codex v2 配置：8 列 × 11 排、每格 192 × 208 px
 - 工程库支持透明空工程、新建、复制、重命名、删除、配置关联状态和交互预览
+- 内置模板与个人工程分层管理；模板只读运行，复制后在用户工作区生成可编辑的完整工程
 - 逐帧预览、整体缩放、横向/纵向缩放、X/Y 位移、停留时间调整；支持 ⌘ 多选帧并按各帧原值批量增减，可单帧 PNG 导入/导出
 - “归一化并写入图集”会将逐帧草稿缩放和位移永久烘焙到 `spritesheet.png`；“复原参数”只清除草稿参数
 - 鼠标靠近、16 方向视线、单击、双击、右击、拖动、随机、空闲、定时和系统事件触发
@@ -263,10 +276,13 @@ my-pet/
 ~/Library/Application Support/SpritePetStudio/
 ├── state.json
 └── Projects/
-    └── <每个桌宠的工作副本>/
+    └── <个人工程 ID>/
+        ├── pet.json
+        ├── studio.json
+        └── spritesheet.png
 ```
 
-若要迁移或备份桌宠，请在 App 内导出工程目录，或备份上述 `SpritePetStudio` 文件夹。删除 App 不会自动删除这里的工程数据。
+App 内置模板不复制到这个目录，它们始终从 App 包读取；只有新建、导入或由模板复制出的个人工程会保存在 `Projects/`。若要迁移或备份桌宠，请在 App 内导出工程目录，或备份上述 `SpritePetStudio` 文件夹。删除 App 不会自动删除这里的工程数据。
 
 ## 外部动作触发
 

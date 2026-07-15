@@ -27,10 +27,7 @@ struct ProjectLibraryView: View {
                 name: project.name,
                 description: project.projectDescription,
                 save: { value, description in
-                    if let index = model.document.projects.firstIndex(where: { $0.id == project.id }) {
-                        model.document.projects[index].name = value
-                        model.document.projects[index].projectDescription = description
-                    }
+                    model.updateProjectMetadata(id: project.id, name: value, description: description)
                     renameProject = nil
                 },
                 cancel: { renameProject = nil }
@@ -80,7 +77,7 @@ struct ProjectLibraryView: View {
                 StudioPageHeader(
                     eyebrow: "Workspace",
                     title: "工程库",
-                    subtitle: "每个工程都能独立显示、移动和触发动作；可以同时显示任意数量的桌宠。"
+                    subtitle: "内置模板可直接运行但保持只读；复制、导入或新建的个人工程会在用户工作区独立保存和编辑。"
                 ) {
                     HStack {
                         Button("导入工程…") { model.importProject() }
@@ -103,15 +100,34 @@ struct ProjectLibraryView: View {
         }
     }
 
+    @ViewBuilder
     private func actionEditorSubpage(project: PetProjectDefinition) -> some View {
-        ActionLibraryView(
-            model: model,
-            editedProject: project,
-            onBackToProjectLibrary: { editingProjectID = nil },
-            onRequestNormalization: { projectPendingNormalization = $0 },
-            onRequestReset: { projectPendingReset = $0 }
-        )
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        if project.isReadOnlyTemplate {
+            VStack(alignment: .leading, spacing: 22) {
+                Button {
+                    editingProjectID = nil
+                } label: {
+                    Label("返回工程库", systemImage: "chevron.left")
+                }
+                .buttonStyle(.bordered)
+                ContentUnavailableView(
+                    "内置模板不可直接编辑",
+                    systemImage: "lock.square.stack",
+                    description: Text("请返回工程库复制完整工程。副本会保存到用户工作区，并开放全部逐帧编辑功能。")
+                )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+            .padding(StudioTheme.pagePadding)
+        } else {
+            ActionLibraryView(
+                model: model,
+                editedProject: project,
+                onBackToProjectLibrary: { editingProjectID = nil },
+                onRequestNormalization: { projectPendingNormalization = $0 },
+                onRequestReset: { projectPendingReset = $0 }
+            )
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        }
     }
 
     private func projectCard(_ project: PetProjectDefinition) -> some View {
@@ -135,10 +151,16 @@ struct ProjectLibraryView: View {
                     }
                     .frame(height: 170)
                     .clipShape(RoundedRectangle(cornerRadius: 12))
-                    if isVisible {
-                        StudioPill(text: "桌面显示中", color: .green)
-                            .padding(9)
+                    HStack {
+                        if project.isReadOnlyTemplate {
+                            StudioPill(text: "内置模板 · 只读", color: .orange)
+                        }
+                        Spacer()
+                        if isVisible {
+                            StudioPill(text: "桌面显示中", color: .green)
+                        }
                     }
+                    .padding(9)
                 }
 
                 HStack(alignment: .firstTextBaseline) {
@@ -154,17 +176,18 @@ struct ProjectLibraryView: View {
                         Button("编辑名称与描述") {
                             renameProject = project
                         }
-                        Button("复制完整工程") {
+                        .disabled(project.isReadOnlyTemplate)
+                        Button(project.isReadOnlyTemplate ? "复制为可编辑完整工程" : "复制完整工程") {
                             model.duplicateProject(id: project.id)
                         }
                         Button("一键归一化全部帧") {
                             projectPendingNormalization = project
                         }
-                        .disabled(model.draftTransformCount(projectID: project.id) == 0)
+                        .disabled(project.isReadOnlyTemplate || model.draftTransformCount(projectID: project.id) == 0)
                         Button("一键复原全部帧参数") {
                             projectPendingReset = project
                         }
-                        .disabled(model.draftTransformCount(projectID: project.id) == 0)
+                        .disabled(project.isReadOnlyTemplate || model.draftTransformCount(projectID: project.id) == 0)
                         Button("导出工程…") {
                             model.selectProject(project.id)
                             model.exportCurrentProject()
@@ -179,7 +202,7 @@ struct ProjectLibraryView: View {
                             model.selectProject(project.id)
                             model.deleteCurrentProject()
                         }
-                        .disabled(project.isBuiltIn)
+                        .disabled(project.isReadOnlyTemplate)
                     } label: {
                         Image(systemName: "ellipsis.circle")
                     }
@@ -187,6 +210,9 @@ struct ProjectLibraryView: View {
                 }
 
                 HStack {
+                    if project.isReadOnlyTemplate {
+                        StudioPill(text: "模板工程", color: .orange)
+                    }
                     StudioPill(
                         text: model.configurationStatus(for: project),
                         color: isTemporary ? .orange : .blue
@@ -197,6 +223,12 @@ struct ProjectLibraryView: View {
                 Text("图集 \(project.atlas.columns) × \(project.atlas.rows) 格 · 单格 \(project.atlas.cellWidth) × \(project.atlas.cellHeight) px")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
+
+                if project.isReadOnlyTemplate {
+                    Label("此项目随 App 提供，仅用于运行与参照；复制完整工程后即可编辑。", systemImage: "lock.fill")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
 
                 ViewThatFits(in: .horizontal) {
                     HStack {
@@ -219,11 +251,18 @@ struct ProjectLibraryView: View {
     }
 
     private func editActionsButton(_ project: PetProjectDefinition) -> some View {
-        Button("编辑动作") {
+        Button {
             model.selectProject(project.id)
             editingProjectID = project.id
+        } label: {
+            Label(
+                project.isReadOnlyTemplate ? "编辑动作（先复制）" : "编辑动作",
+                systemImage: project.isReadOnlyTemplate ? "lock.fill" : "slider.horizontal.3"
+            )
         }
         .buttonStyle(StudioPrimaryButtonStyle())
+        .disabled(project.isReadOnlyTemplate)
+        .help(project.isReadOnlyTemplate ? "内置模板为只读；请先使用“复制为可编辑完整工程”。" : "打开动作编辑器")
     }
 }
 

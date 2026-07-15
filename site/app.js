@@ -17,7 +17,7 @@ const translations = {
     backToProduct: "Product",
     heroEyebrow: "Native macOS · Open-source pet studio",
     heroTitle: "Bring characters<br /><em>to life on your desktop.</em>",
-    heroLede: "Start with NARUTO 小鸣人 and DIMOO Heartfelt Mix already in your library. Edit every frame, compose any animation, and connect mouse or system events.",
+    heroLede: "Start with NARUTO 小鸣人 and DIMOO Heartfelt Mix as pristine templates. Run them immediately, or duplicate either one into a private project you can edit frame by frame.",
     downloadMac: "Download for macOS",
     viewSource: "View source",
     appInfo: "Application information",
@@ -39,7 +39,7 @@ const translations = {
     normalized: "Normalized",
     coreTech: "Core technologies",
     codexAtlas: "Codex v2 atlas",
-    includedProjects: "2 included projects",
+    includedProjects: "2 read-only templates",
     featuresIndex: "01 / Features",
     featuresTitle: "One framework.<br />Every kind of character.",
     featuresIntro: "Run, edit, and orchestrate events in one native application.",
@@ -56,9 +56,9 @@ const translations = {
     mouse: "mouse",
     idle: "idle",
     system: "system",
-    multiProject: "Multi-project",
-    multiTitle: "One companion, two, or a whole crew.",
-    multiDesc: "NARUTO 小鸣人 and DIMOO Heartfelt Mix arrive as complete projects, while every additional pet keeps its own atlas, triggers, position, and visibility.",
+    multiProject: "Templates + private projects",
+    multiTitle: "Keep the originals pristine. Make every copy yours.",
+    multiDesc: "Built-in pets remain safe, runnable references. Duplicate one to create a complete editable workspace, while every private pet keeps its own atlas, triggers, position, and visibility.",
     openFormat: "Open format",
     formatCardTitle: "One big PNG. Freedom in both directions.",
     formatCardDesc: "Keep full compatibility with the fixed Codex v2 atlas while defining custom animations, frame counts, and grids.",
@@ -160,7 +160,7 @@ const translations = {
     backToProduct: "产品页",
     heroEyebrow: "原生 macOS · 开源桌宠工作台",
     heroTitle: "让角色真正<br /><em>活在桌面上。</em>",
-    heroLede: "下载后即可在工程库看到 NARUTO 小鸣人与 DIMOO 心动特调。继续编辑每一帧、组合任意动作，并绑定鼠标与系统事件。",
+    heroLede: "下载后即可运行 NARUTO 小鸣人与 DIMOO 心动特调两个只读模板。复制任意模板，就能得到可逐帧编辑、完全独立的个人工程。",
     downloadMac: "下载 macOS 版",
     viewSource: "查看源码",
     appInfo: "应用信息",
@@ -182,7 +182,7 @@ const translations = {
     normalized: "已归一化",
     coreTech: "核心技术",
     codexAtlas: "Codex v2 图集",
-    includedProjects: "内置 2 个完整工程",
+    includedProjects: "内置 2 个只读模板",
     featuresIndex: "01 / 能力",
     featuresTitle: "一套框架，容纳<br />每一种角色性格。",
     featuresIntro: "运行、编辑和事件编排在同一个原生应用里完成。",
@@ -199,9 +199,9 @@ const translations = {
     mouse: "鼠标",
     idle: "空闲",
     system: "系统",
-    multiProject: "多工程",
-    multiTitle: "一只、两只，或者整支小队。",
-    multiDesc: "NARUTO 小鸣人与 DIMOO 心动特调作为完整工程随 App 提供；新增桌宠仍各自保存图集、触发器、位置与显示状态。",
+    multiProject: "模板 + 个人工程",
+    multiTitle: "模板保持原样，副本完全属于你。",
+    multiDesc: "内置桌宠是安全、可直接运行的只读参照。复制后会创建完整的可编辑工作区；每个个人桌宠独立保存图集、触发器、位置与显示状态。",
     openFormat: "开放格式",
     formatCardTitle: "一张大 PNG，双向互通。",
     formatCardDesc: "保留 Codex v2 固定图集兼容，同时允许自定义动作数量、帧数和图集网格。",
@@ -370,7 +370,7 @@ const updateRelease = async () => {
     const release = await response.json();
     const archive = release.assets?.find((asset) => asset.name === "SpritePetStudio-macOS.zip");
     document.querySelectorAll("[data-version]").forEach((node) => {
-      node.textContent = release.tag_name || "v0.2.1";
+      node.textContent = release.tag_name || "v0.3.0";
     });
     if (archive?.browser_download_url) {
       document.querySelectorAll("[data-release-download]").forEach((link) => {

@@ -23,3 +23,6 @@ jobs:
 
       - name: Compile app and CLI
         run: make build
+
+      - name: Verify template and private project storage
+        run: make test

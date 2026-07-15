@@ -63,6 +63,7 @@ struct PetProjectDefinition: Codable, Identifiable, Equatable {
     var desktopOriginY: Double? = nil
 
     var showsOnDesktop: Bool { isVisibleOnDesktop ?? false }
+    var isReadOnlyTemplate: Bool { isBuiltIn }
 }
 
 struct AtlasConfiguration: Codable, Identifiable, Equatable {

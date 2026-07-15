@@ -149,21 +149,25 @@ struct StudioPageBackground: View {
 }
 
 struct StudioPrimaryButtonStyle: ButtonStyle {
+    @Environment(\.isEnabled) private var isEnabled
+
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.callout.weight(.semibold))
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
-            .foregroundStyle(.white)
+            .foregroundStyle(isEnabled ? Color.white : Color.secondary)
             .background(
                 LinearGradient(
-                    colors: [StudioTheme.accentSoft, StudioTheme.accent],
+                    colors: isEnabled
+                        ? [StudioTheme.accentSoft, StudioTheme.accent]
+                        : [Color.secondary.opacity(0.12), Color.secondary.opacity(0.18)],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 ),
                 in: Capsule()
             )
-            .opacity(configuration.isPressed ? 0.72 : 1)
+            .opacity(configuration.isPressed && isEnabled ? 0.72 : 1)
             .scaleEffect(configuration.isPressed ? 0.98 : 1)
     }
 }

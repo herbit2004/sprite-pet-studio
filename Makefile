@@ -1,7 +1,10 @@
-.PHONY: build app release install clean
+.PHONY: build test app release install clean
 
 build:
 	CLANG_MODULE_CACHE_PATH="$(CURDIR)/.build/ModuleCache" XDG_CACHE_HOME="$(CURDIR)/.build/cache" swift build --disable-sandbox
+
+test:
+	./scripts/test-workspace.sh
 
 app:
 	./scripts/build-app.sh
