@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f5f4ef" />
+    <meta
+      name="description"
+      content="Install SpritePet Studio on macOS, add it to Applications, and safely handle the first-launch security warning."
+    />
+    <meta property="og:title" content="Install SpritePet Studio on macOS" />
+    <meta
+      property="og:description"
+      content="A bilingual guide for installing SpritePet Studio and handling macOS Gatekeeper."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="assets/app-icon.png" />
+    <title>Install SpritePet Studio on macOS</title>
+    <link rel="icon" href="assets/app-icon.png" />
+    <link rel="stylesheet" href="styles.css" />
+    <noscript><style>.reveal { opacity: 1; transform: none; }</style></noscript>
+    <script src="app.js" defer></script>
+  </head>
+  <body class="install-page" data-page="install">
+    <div class="ambient ambient-one" aria-hidden="true"></div>
+    <div class="ambient ambient-two" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <a class="brand" href="index.html" aria-label="Back to product page" data-i18n-aria="productHomeLabel">
+        <img src="assets/app-icon.png" alt="" />
+        <span>SpritePet Studio</span>
+      </a>
+      <nav aria-label="Main navigation" data-i18n-aria="navLabel">
+        <a href="index.html#features" data-i18n="navFeatures">Features</a>
+        <a href="index.html#workflow" data-i18n="navWorkflow">Workflow</a>
+        <a href="index.html#format" data-i18n="navFormat">Project format</a>
+      </nav>
+      <div class="header-controls">
+        <button class="language-toggle" type="button" data-language-toggle aria-label="Switch to Chinese">
+          <svg viewBox="0 0 20 20" aria-hidden="true">
+            <circle cx="10" cy="10" r="7.5"></circle>
+            <path d="M2.8 10h14.4M10 2.5c2 2 3 4.5 3 7.5s-1 5.5-3 7.5c-2-2-3-4.5-3-7.5s1-5.5 3-7.5Z"></path>
+          </svg>
+          <span data-language-label>中文</span>
+        </button>
+        <a class="install-help-link is-active" href="install.html" aria-current="page" data-i18n-aria="installHelpLabel">
+          <svg viewBox="0 0 20 20" aria-hidden="true">
+            <circle cx="10" cy="10" r="7.5"></circle>
+            <path d="M7.9 7.2a2.3 2.3 0 0 1 4.3 1.1c0 1.7-2.2 1.8-2.2 3.4M10 14.5h.01"></path>
+          </svg>
+          <span data-i18n="installHelp">Install help</span>
+        </a>
+        <a class="header-action" href="index.html">
+          <span data-i18n="backToProduct">Product</span>
+          <span aria-hidden="true">↗</span>
+        </a>
+      </div>
+    </header>
+
+    <main class="install-main">
+      <section class="install-hero shell">
+        <div class="install-hero-copy reveal">
+          <div class="eyebrow">
+            <span class="status-dot"></span>
+            <span data-i18n="installEyebrow">Install · macOS</span>
+          </div>
+          <h1 data-i18n-html="installTitle">From download<br /><em>to a real Mac app.</em></h1>
+          <p data-i18n="installIntro">A ZIP in Downloads has not been installed yet. Move SpritePetStudio.app to Applications first, then approve its first launch in macOS Privacy &amp; Security.</p>
+          <div class="hero-actions">
+            <a
+              class="button button-primary"
+              data-release-download
+              href="https://github.com/herbit2004/sprite-pet-studio/releases/latest/download/SpritePetStudio-macOS.zip"
+            >
+              <span data-i18n="downloadLatest">Download latest release</span>
+              <span aria-hidden="true">↓</span>
+            </a>
+            <a class="button button-secondary" href="#gatekeeper">
+              <span data-i18n="solveWarning">Solve the security warning</span>
+              <span aria-hidden="true">↓</span>
+            </a>
+          </div>
+          <p class="install-source-line">
+            <span data-i18n="officialSource">Use only the official GitHub Release and verify its checksum before overriding macOS security.</span>
+          </p>
+        </div>
+
+        <div class="install-visual reveal" data-delay="1" aria-hidden="true">
+          <div class="install-window">
+            <div class="window-bar">
+              <div class="traffic-lights"><i></i><i></i><i></i></div>
+              <span data-i18n="finderTitle">Applications — Finder</span>
+              <span></span>
+            </div>
+            <div class="finder-scene">
+              <div class="finder-sidebar">
+                <i></i><i></i><i class="active"></i><i></i>
+              </div>
+              <div class="finder-app">
+                <img src="assets/app-icon.png" alt="" />
+                <strong>SpritePetStudio</strong>
+                <span>/Applications</span>
+              </div>
+            </div>
+          </div>
+          <div class="install-path-chip install-path-chip-one"><span>ZIP</span><i>→</i><strong>.app</strong></div>
+          <div class="install-path-chip install-path-chip-two"><span>⌘ Space</span><strong data-i18n="searchable">Searchable</strong></div>
+        </div>
+      </section>
+
+      <section class="install-section shell" id="applications">
+        <div class="install-section-heading reveal">
+          <span class="section-index" data-i18n="installFlowIndex">01 / Put it in the right place</span>
+          <h2 data-i18n-html="installFlowTitle">Three steps make it<br />a searchable Mac app.</h2>
+          <p data-i18n="installFlowIntro">Downloads is only a holding area. macOS adds third-party apps to its app browser and Spotlight after they are placed in Applications.</p>
+        </div>
+        <div class="install-steps">
+          <article class="install-step reveal">
+            <span>01</span>
+            <div class="install-step-icon">↓</div>
+            <h3 data-i18n="unzipTitle">Unzip the release</h3>
+            <p data-i18n-html="unzipDesc">Open Downloads and double-click <code>SpritePetStudio-macOS.zip</code>. You should now see <code>SpritePetStudio.app</code>.</p>
+          </article>
+          <article class="install-step reveal" data-delay="1">
+            <span>02</span>
+            <div class="install-step-icon">↗</div>
+            <h3 data-i18n="moveTitle">Move the app</h3>
+            <p data-i18n-html="moveDesc">In Finder, choose <strong>Go → Applications</strong> (⇧⌘A), then drag <code>SpritePetStudio.app</code> into that folder.</p>
+          </article>
+          <article class="install-step reveal" data-delay="2">
+            <span>03</span>
+            <div class="install-step-icon">⌕</div>
+            <h3 data-i18n="launchTitle">Open from Applications</h3>
+            <p data-i18n="launchDesc">Launch it once from Applications. It can then appear in Spotlight and the macOS Apps view; drag its icon to the Dock if you want it pinned.</p>
+          </article>
+        </div>
+        <div class="finder-tip reveal">
+          <span class="finder-tip-icon">⌘</span>
+          <div>
+            <strong data-i18n="finderTipTitle">Can’t find it?</strong>
+            <p data-i18n-html="finderTipBody">Check that the exact path is <code>/Applications/SpritePetStudio.app</code>—not the ZIP and not an app still inside Downloads. Then press ⌘ Space and search for <strong>SpritePetStudio</strong>.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="security-section" id="gatekeeper">
+        <div class="shell">
+          <div class="install-section-heading install-section-heading-light reveal">
+            <span class="section-index" data-i18n="securityIndex">02 / First launch</span>
+            <h2 data-i18n-html="securityTitle">The warning is expected.<br />The source still matters.</h2>
+            <p data-i18n="securityIntro">The current open-source build is ad-hoc signed and has not been notarized with an Apple Developer ID. macOS therefore cannot verify its developer automatically.</p>
+          </div>
+
+          <div class="security-grid">
+            <article class="gatekeeper-card reveal">
+              <div class="gatekeeper-card-head">
+                <span class="security-orb">!</span>
+                <div>
+                  <small>macOS Gatekeeper</small>
+                  <h3 data-i18n="gatekeeperCardTitle">Open it through Privacy &amp; Security</h3>
+                </div>
+              </div>
+              <ol class="security-steps">
+                <li><span>1</span><p data-i18n="securityStep1">Try to open SpritePetStudio from Applications once. In the warning shown above, click Done—not Move to Trash.</p></li>
+                <li><span>2</span><p data-i18n-html="securityStep2">Open <strong>System Settings → Privacy &amp; Security</strong>, then scroll down to the Security section.</p></li>
+                <li><span>3</span><p data-i18n-html="securityStep3">Find the message about SpritePetStudio and click <strong>Open Anyway</strong>. Apple keeps this button available for about one hour after the failed launch.</p></li>
+                <li><span>4</span><p data-i18n-html="securityStep4">Authenticate with your password or Touch ID, then confirm <strong>Open</strong>. macOS saves this app as an exception.</p></li>
+              </ol>
+              <a class="apple-reference" href="https://support.apple.com/guide/mac-help/open-an-app-by-overriding-security-settings-mh40617/mac" target="_blank" rel="noreferrer">
+                <span data-i18n="appleSecurityGuide">Read Apple’s official security guide</span><span>↗</span>
+              </a>
+            </article>
+
+            <div class="security-side">
+              <article class="verify-card reveal" data-delay="1">
+                <span class="card-kicker" data-i18n="verifyKicker">Before you override</span>
+                <h3 data-i18n="verifyTitle">Verify the download.</h3>
+                <p data-i18n="verifyDesc">Download both release files into the same folder, then run this command in Terminal. Continue only when it prints “OK”.</p>
+                <pre><code>shasum -a 256 -c SpritePetStudio-macOS.zip.sha256</code></pre>
+                <div class="verify-links">
+                  <a data-release-download href="https://github.com/herbit2004/sprite-pet-studio/releases/latest/download/SpritePetStudio-macOS.zip"><span data-i18n="downloadAppFile">App ZIP</span> ↓</a>
+                  <a href="https://github.com/herbit2004/sprite-pet-studio/releases/latest/download/SpritePetStudio-macOS.zip.sha256"><span data-i18n="downloadChecksum">Checksum</span> ↓</a>
+                </div>
+              </article>
+              <article class="why-card reveal" data-delay="2">
+                <span class="card-kicker" data-i18n="whyKicker">Why this happens</span>
+                <h3 data-i18n="whyTitle">Not a Finder problem.</h3>
+                <p data-i18n="whyDesc">The alert is Gatekeeper reacting to an unnotarized build. Moving the app to Applications solves indexing; approving it in Privacy &amp; Security solves first launch.</p>
+              </article>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="install-section shell troubleshoot-section" id="troubleshooting">
+        <div class="install-section-heading reveal">
+          <span class="section-index" data-i18n="troubleIndex">03 / Troubleshooting</span>
+          <h2 data-i18n-html="troubleTitle">Still stuck?<br />Check these first.</h2>
+        </div>
+        <div class="trouble-grid">
+          <details class="trouble-item reveal" open>
+            <summary data-i18n="openAnywayMissing">“Open Anyway” is missing</summary>
+            <p data-i18n="openAnywayMissingBody">Try launching the app from Applications again, dismiss the warning, and immediately reopen Privacy &amp; Security. On a managed work or school Mac, administrator policy may remove this option.</p>
+          </details>
+          <details class="trouble-item reveal" data-delay="1">
+            <summary data-i18n="spotlightMissing">The app is not in Spotlight</summary>
+            <p data-i18n="spotlightMissingBody">Confirm the app is directly inside Applications, open it once from Finder, then wait a moment and search its exact name. A ZIP or an app left in Downloads is not installed.</p>
+          </details>
+          <details class="trouble-item reveal" data-delay="2">
+            <summary data-i18n="terminalFallback">Advanced fallback for a verified release</summary>
+            <p data-i18n="terminalWarning">Only after verifying the official release checksum, the commands below remove the quarantine flag from this one app and open it. Never use this on an untrusted download.</p>
+            <pre><code>xattr -dr com.apple.quarantine "/Applications/SpritePetStudio.app"
+open "/Applications/SpritePetStudio.app"</code></pre>
+          </details>
+        </div>
+        <div class="support-links reveal">
+          <a href="https://support.apple.com/guide/mac-help/open-apps-in-spotlight-mh35840/mac" target="_blank" rel="noreferrer"><span data-i18n="appleAppsGuide">Apple: add apps to Spotlight</span><span>↗</span></a>
+          <a href="https://github.com/herbit2004/sprite-pet-studio/issues" target="_blank" rel="noreferrer"><span data-i18n="reportIssue">Report an issue on GitHub</span><span>↗</span></a>
+        </div>
+      </section>
+
+      <section class="download-section shell reveal install-download-section">
+        <div class="download-glow" aria-hidden="true"></div>
+        <div>
+          <span class="section-index" data-i18n="readyToInstall">Ready to install</span>
+          <h2 data-i18n-html="installDownloadTitle">Put your next companion<br />in Applications.</h2>
+          <p data-i18n="installDownloadMeta">Official GitHub Release · macOS 14 or later</p>
+        </div>
+        <div class="download-actions">
+          <a class="button button-light" data-release-download href="https://github.com/herbit2004/sprite-pet-studio/releases/latest/download/SpritePetStudio-macOS.zip">
+            <span data-i18n="downloadProduct">Download SpritePet Studio</span>
+            <span aria-hidden="true">↓</span>
+          </a>
+          <small data-i18n="installSafetyLine">Verify · Move to Applications · Approve once</small>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer shell">
+      <a class="brand" href="index.html">
+        <img src="assets/app-icon.png" alt="" />
+        <span>SpritePet Studio</span>
+      </a>
+      <p data-i18n="footerTagline">Native desktop companions, built frame by frame.</p>
+      <div>
+        <a href="index.html" data-i18n="backToProduct">Product</a>
+        <a href="https://github.com/herbit2004/sprite-pet-studio/releases" data-i18n="releases">Releases</a>
+        <span>© <span data-year></span></span>
+      </div>
+    </footer>
+  </body>
+</html>
