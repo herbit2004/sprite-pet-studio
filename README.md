@@ -12,6 +12,12 @@
 
 > 运行环境：macOS 14（Sonoma）或更新版本；从源码构建需要 Xcode Command Line Tools 与 Swift 5.10 或更新版本。
 
+## v0.2.1 修复
+
+- 修复发布版 App 在 App Translocation 或 Applications 中启动时找不到 SwiftPM 内置资源、随后立即崩溃的问题；
+- `make app` 与 `make release` 现在会校验 App 内的 SwiftPM 资源 Bundle 与两个内置工程文件，防止缺少图集的安装包再次发布；
+- `make install` 会先退出旧进程并完整替换 Applications 中的 App，确保新版启动和内置工程迁移真正生效。
+
 ## v0.2.0 更新
 
 - 首次启动直接提供 `NARUTO 小鸣人` 与 `DIMOO 心动特调`，两个工程均可独立显示与触发动作；

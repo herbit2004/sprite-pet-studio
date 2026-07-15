@@ -24,9 +24,23 @@ cp "$BIN_DIR/spritepetctl" "$APP/Contents/MacOS/spritepetctl"
 cp "$ROOT/Sources/SpritePetStudio/Resources/AppIcon.icns" "$APP/Contents/Resources/AppIcon.icns"
 
 RESOURCE_BUNDLE="$BIN_DIR/SpritePetStudio_SpritePetStudio.bundle"
-if [[ -d "$RESOURCE_BUNDLE" ]]; then
-    ditto "$RESOURCE_BUNDLE" "$APP/Contents/Resources/SpritePetStudio_SpritePetStudio.bundle"
+if [[ ! -d "$RESOURCE_BUNDLE" ]]; then
+    echo "Missing SwiftPM resource bundle: $RESOURCE_BUNDLE" >&2
+    exit 1
 fi
+ditto "$RESOURCE_BUNDLE" "$APP/Contents/Resources/SpritePetStudio_SpritePetStudio.bundle"
+
+BUILTIN_ROOT="$APP/Contents/Resources/SpritePetStudio_SpritePetStudio.bundle/BuiltinProjects"
+for REQUIRED_FILE in \
+    "$BUILTIN_ROOT/little-naruto/project.json" \
+    "$BUILTIN_ROOT/little-naruto/spritesheet.png" \
+    "$BUILTIN_ROOT/dimoo-heartfelt-mix/project.json" \
+    "$BUILTIN_ROOT/dimoo-heartfelt-mix/spritesheet.png"; do
+    if [[ ! -f "$REQUIRED_FILE" ]]; then
+        echo "Missing built-in project resource: $REQUIRED_FILE" >&2
+        exit 1
+    fi
+done
 
 codesign --force --deep --sign - "$APP"
 echo "$APP"

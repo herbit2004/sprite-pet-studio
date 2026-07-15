@@ -2,6 +2,23 @@ import AppKit
 import Foundation
 
 final class DocumentStore {
+    private static let resourceBundle: Bundle? = {
+        let bundleName = "SpritePetStudio_SpritePetStudio.bundle"
+        let candidates: [URL?] = [
+            Bundle.main.resourceURL?.appendingPathComponent(bundleName, isDirectory: true),
+            Bundle.main.bundleURL.appendingPathComponent(bundleName, isDirectory: true),
+            Bundle.main.executableURL?
+                .deletingLastPathComponent()
+                .appendingPathComponent(bundleName, isDirectory: true)
+        ]
+        for case let url? in candidates {
+            if let bundle = Bundle(url: url) {
+                return bundle
+            }
+        }
+        return nil
+    }()
+
     enum StoreError: LocalizedError {
         case bundledProjectMissing(String)
         case projectImageMissing(String)
@@ -60,16 +77,26 @@ final class DocumentStore {
                     document.projects[index].configurationLibraryID = CodexV2Schema.configuration.id
                 }
             }
+            var bundledMetadataChanged = false
             for bundledProject in bundledProjects {
                 if let index = document.projects.firstIndex(where: { $0.id == bundledProject.id }) {
                     // Keep the user's current frame/action edits when upgrading an existing
                     // installation, but reserve bundled project IDs for the built-in samples.
+                    if document.projects[index].name != bundledProject.name
+                        || document.projects[index].projectDescription != bundledProject.projectDescription
+                        || !document.projects[index].isBuiltIn {
+                        bundledMetadataChanged = true
+                    }
                     document.projects[index].name = bundledProject.name
                     document.projects[index].projectDescription = bundledProject.projectDescription
                     document.projects[index].isBuiltIn = true
                 } else {
                     document.projects.append(bundledProject)
+                    bundledMetadataChanged = true
                 }
+            }
+            if bundledMetadataChanged {
+                try save(document)
             }
             return document
         }
@@ -108,7 +135,7 @@ final class DocumentStore {
         folder: String,
         displayName: String
     ) throws -> PetProjectDefinition {
-        guard let url = Bundle.module.url(
+        guard let url = Self.resourceBundle?.url(
             forResource: "project",
             withExtension: "json",
             subdirectory: "BuiltinProjects/\(folder)"
@@ -136,7 +163,7 @@ final class DocumentStore {
             let path = relative as NSString
             let name = path.deletingPathExtension
             let ext = path.pathExtension
-            guard let url = Bundle.module.url(forResource: name, withExtension: ext) else {
+            guard let url = Self.resourceBundle?.url(forResource: name, withExtension: ext) else {
                 throw StoreError.projectImageMissing(pathValue)
             }
             return url
