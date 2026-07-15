@@ -12,6 +12,10 @@
 
 > 运行环境：macOS 14（Sonoma）或更新版本；从源码构建需要 Xcode Command Line Tools 与 Swift 5.10 或更新版本。
 
+## v0.5.1 更新
+
+- 设置窗口顶栏右侧新增 `Website` 按钮，可直接用默认浏览器打开 SpritePet Studio 的 GitHub Pages 官网。
+
 ## v0.5.0 更新
 
 - 将当前已归一化的 `NARUTO 小鸣人 副本` 图集同步为新版内置 NARUTO 模板；模板仍保持只读，复制后即可继续逐帧编辑；

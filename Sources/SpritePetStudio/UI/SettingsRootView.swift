@@ -26,9 +26,14 @@ private enum SettingsDestination: String, Identifiable {
 }
 
 struct SettingsRootView: View {
+    private static let websiteURL = URL(
+        string: "https://herbit2004.github.io/sprite-pet-studio/"
+    )!
+
     @ObservedObject var model: AppModel
     @State private var destination: SettingsDestination = .projects
     @State private var hoveredDestination: SettingsDestination?
+    @State private var isWebsiteHovered = false
 
     private let destinations: [SettingsDestination] = [
         .projects, .configurations, .general, .events
@@ -66,6 +71,23 @@ struct SettingsRootView: View {
                 navigationButton(item)
             }
             Spacer(minLength: 12)
+            Divider()
+                .frame(height: 18)
+                .padding(.horizontal, 8)
+            Link(destination: Self.websiteURL) {
+                Label("Website", systemImage: "globe")
+                    .font(.callout.weight(.medium))
+                    .foregroundStyle(Color.primary)
+                    .frame(minWidth: 104, minHeight: 40)
+                    .contentShape(Rectangle())
+                    .background(
+                        isWebsiteHovered ? Color.secondary.opacity(0.08) : Color.clear,
+                        in: RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    )
+            }
+            .buttonStyle(.plain)
+            .onHover { isWebsiteHovered = $0 }
+            .help("在浏览器中打开 SpritePet Studio 官网")
         }
         .padding(.horizontal, 18)
         .padding(.vertical, 8)
