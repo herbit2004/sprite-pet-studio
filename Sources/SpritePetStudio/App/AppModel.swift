@@ -4,12 +4,27 @@ import ServiceManagement
 import SwiftUI
 import UniformTypeIdentifiers
 
+struct PublishedAppVersion: Decodable, Equatable {
+    let version: String
+    let downloadURL: URL
+    let releaseNotesURL: URL
+}
+
+enum UpdateCheckState: Equatable {
+    case idle
+    case checking
+    case upToDate(latestVersion: String)
+    case updateAvailable(PublishedAppVersion)
+    case failed(message: String)
+}
+
 @MainActor
 final class AppModel: ObservableObject {
     @Published var document: AppDocument
     @Published var lastError: String? = nil
     @Published var loginItemStatusText = ""
     @Published private(set) var atlasContentRevision: UInt64 = 0
+    @Published private(set) var updateCheckState: UpdateCheckState = .idle
 
     let store: DocumentStore
     let bus = PetEventBus()
@@ -19,6 +34,10 @@ final class AppModel: ObservableObject {
     private var settingsWindowController: SettingsWindowController?
     private var saveCancellable: AnyCancellable?
     private var isStarted = false
+
+    private static let updateManifestURL = URL(
+        string: "https://herbit2004.github.io/sprite-pet-studio/version.json"
+    )!
 
     init() {
         let store = DocumentStore()
@@ -65,6 +84,53 @@ final class AppModel: ObservableObject {
 
     var currentProjectIndex: Int? {
         document.projects.firstIndex { $0.id == document.selectedProjectID }
+    }
+
+    var currentAppVersion: String {
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
+            ?? "开发版"
+    }
+
+    func checkForUpdates() {
+        guard updateCheckState != .checking else { return }
+        updateCheckState = .checking
+
+        Task { [weak self] in
+            guard let self else { return }
+            do {
+                var request = URLRequest(url: Self.updateManifestURL)
+                request.cachePolicy = .reloadIgnoringLocalCacheData
+                request.timeoutInterval = 12
+                request.setValue("no-cache", forHTTPHeaderField: "Cache-Control")
+
+                let (data, response) = try await URLSession.shared.data(for: request)
+                guard let httpResponse = response as? HTTPURLResponse,
+                      200..<300 ~= httpResponse.statusCode else {
+                    throw URLError(.badServerResponse)
+                }
+
+                let published = try JSONDecoder().decode(PublishedAppVersion.self, from: data)
+                guard published.downloadURL.scheme == "https",
+                      published.releaseNotesURL.scheme == "https" else {
+                    throw URLError(.unsupportedURL)
+                }
+
+                updateCheckState = Self.isVersion(
+                    published.version,
+                    newerThan: currentAppVersion
+                ) ? .updateAvailable(published) : .upToDate(latestVersion: published.version)
+            } catch {
+                updateCheckState = .failed(message: error.localizedDescription)
+            }
+        }
+    }
+
+    func openPublishedUpdate(_ version: PublishedAppVersion) {
+        NSWorkspace.shared.open(version.downloadURL)
+    }
+
+    func openPublishedReleaseNotes(_ version: PublishedAppVersion) {
+        NSWorkspace.shared.open(version.releaseNotesURL)
     }
 
     func updateProjectMetadata(id: String, name: String, description: String) {
@@ -826,5 +892,30 @@ final class AppModel: ObservableObject {
         }
         let compact = String(mapped).split(separator: "-").joined(separator: "-")
         return compact.isEmpty ? "pet" : compact
+    }
+
+    private static func isVersion(_ candidate: String, newerThan current: String) -> Bool {
+        let candidateParts = semanticVersionParts(candidate)
+        let currentParts = semanticVersionParts(current)
+        guard !candidateParts.isEmpty else { return false }
+        guard !currentParts.isEmpty else { return true }
+
+        let count = max(candidateParts.count, currentParts.count)
+        for index in 0..<count {
+            let candidatePart = index < candidateParts.count ? candidateParts[index] : 0
+            let currentPart = index < currentParts.count ? currentParts[index] : 0
+            if candidatePart != currentPart { return candidatePart > currentPart }
+        }
+        return false
+    }
+
+    private static func semanticVersionParts(_ value: String) -> [Int] {
+        let normalized = value
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .trimmingCharacters(in: CharacterSet(charactersIn: "vV"))
+            .split(separator: "-", maxSplits: 1)
+            .first
+            .map(String.init) ?? ""
+        return normalized.split(separator: ".").compactMap { Int($0) }
     }
 }

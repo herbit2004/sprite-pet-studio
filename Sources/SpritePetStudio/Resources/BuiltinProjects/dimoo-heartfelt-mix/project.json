@@ -448,6 +448,20 @@
           "minute": 0,
           "randomWeight": 1,
           "stringValue": ""
+        },
+        {
+          "cooldownSeconds": 0,
+          "distance": 160,
+          "hour": 12,
+          "id": "62F897D3-874F-4EAA-AC9E-71210EC32D6B",
+          "idleSeconds": 30,
+          "isEnabled": true,
+          "kind": "appLaunch",
+          "maximumIntervalSeconds": 45,
+          "minimumIntervalSeconds": 15,
+          "minute": 0,
+          "randomWeight": 1,
+          "stringValue": ""
         }
       ]
     },
@@ -533,7 +547,7 @@
           "stringValue": ""
         },
         {
-          "cooldownSeconds": 0,
+          "cooldownSeconds": 1,
           "distance": 160,
           "hour": 12,
           "id": "DE4E7C8D-ECC0-4CF3-9721-5CD51E860204",
@@ -740,14 +754,14 @@
       "name": "等待",
       "playback": "once",
       "priority": 20,
-      "repeatCount": 1,
+      "repeatCount": 3,
       "triggers": [
         {
-          "cooldownSeconds": 60,
+          "cooldownSeconds": 0,
           "distance": 160,
           "hour": 12,
           "id": "10000000-0000-0000-0000-000000000602",
-          "idleSeconds": 30,
+          "idleSeconds": 5,
           "isEnabled": true,
           "kind": "random",
           "maximumIntervalSeconds": 90,
@@ -834,7 +848,7 @@
       "name": "执行任务",
       "playback": "once",
       "priority": 55,
-      "repeatCount": 1,
+      "repeatCount": 3,
       "triggers": [
         {
           "cooldownSeconds": 60,
@@ -959,15 +973,15 @@
           "stringValue": "review"
         },
         {
-          "cooldownSeconds": 1,
+          "cooldownSeconds": 0,
           "distance": 160,
           "hour": 12,
-          "id": "08DCF017-E7F2-4B3A-A0AC-502ABA2AE2A6",
+          "id": "411BE618-8A8E-4913-938F-4976870AE91A",
           "idleSeconds": 30,
           "isEnabled": true,
           "kind": "random",
-          "maximumIntervalSeconds": 90,
-          "minimumIntervalSeconds": 45,
+          "maximumIntervalSeconds": 45,
+          "minimumIntervalSeconds": 15,
           "minute": 0,
           "randomWeight": 0.6,
           "stringValue": ""

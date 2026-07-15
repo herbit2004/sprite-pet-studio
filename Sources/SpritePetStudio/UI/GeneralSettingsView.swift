@@ -12,6 +12,8 @@ struct GeneralSettingsView: View {
                     subtitle: "调整当前桌宠的显示、渲染与系统行为。"
                 )
 
+                versionCard
+
                 StudioCard {
                     VStack(alignment: .leading, spacing: 14) {
                         Label("桌宠显示", systemImage: "pawprint.fill").font(.headline)
@@ -67,6 +69,76 @@ struct GeneralSettingsView: View {
                 }
             }
             .padding(StudioTheme.pagePadding)
+        }
+    }
+
+    private var versionCard: some View {
+        StudioCard {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack(spacing: 10) {
+                    Label("版本与更新", systemImage: "arrow.triangle.2.circlepath")
+                        .font(.headline)
+                    Spacer()
+                    StudioPill(text: "v\(model.currentAppVersion)")
+                }
+
+                Text("点击检查后，应用会读取产品网站发布的固定版本清单；不会上传工程或设备信息。")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                updateStatus
+
+                HStack(spacing: 10) {
+                    Button {
+                        model.checkForUpdates()
+                    } label: {
+                        Label(
+                            model.updateCheckState == .checking ? "正在检查…" : "检查更新",
+                            systemImage: "arrow.clockwise"
+                        )
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(model.updateCheckState == .checking)
+
+                    if case .updateAvailable(let published) = model.updateCheckState {
+                        Button("下载 v\(published.version)") {
+                            model.openPublishedUpdate(published)
+                        }
+                        Button("查看发布说明") {
+                            model.openPublishedReleaseNotes(published)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var updateStatus: some View {
+        switch model.updateCheckState {
+        case .idle:
+            Label("尚未检查更新", systemImage: "minus.circle")
+                .foregroundStyle(.secondary)
+        case .checking:
+            HStack(spacing: 9) {
+                ProgressView().controlSize(.small)
+                Text("正在连接 GitHub Pages…")
+            }
+            .foregroundStyle(.secondary)
+        case .upToDate(let latestVersion):
+            Label("已经是最新版本（v\(latestVersion)）", systemImage: "checkmark.circle.fill")
+                .foregroundStyle(.green)
+        case .updateAvailable(let published):
+            Label("发现新版本 v\(published.version)", systemImage: "arrow.down.circle.fill")
+                .foregroundStyle(.orange)
+        case .failed(let message):
+            VStack(alignment: .leading, spacing: 4) {
+                Label("暂时无法检查更新", systemImage: "exclamationmark.triangle.fill")
+                    .foregroundStyle(.orange)
+                Text(message)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
         }
     }
 }

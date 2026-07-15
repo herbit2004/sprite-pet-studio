@@ -12,8 +12,10 @@ final class PetScene: SKScene {
     private var frameStartedAt: TimeInterval?
     private var lastUpdateTime: TimeInterval = 0
     private var viewportScale: CGFloat = 1
+    private var isWaitingForFirstRenderedFrame = false
 
     var onActionFinished: ((String) -> Void)?
+    var onFirstFrameRendered: (() -> Void)?
     var currentActionID: String? { currentAction?.id }
     var currentPriority: Int { currentAction?.priority ?? Int.min }
 
@@ -40,6 +42,7 @@ final class PetScene: SKScene {
         frameIndex = 0
         completedPasses = 0
         frameStartedAt = nil
+        isWaitingForFirstRenderedFrame = true
         if let action = project.defaultAction {
             play(action, force: true, restart: true)
         }
@@ -125,6 +128,18 @@ final class PetScene: SKScene {
         guard currentTime - (frameStartedAt ?? currentTime) >= duration else { return }
         frameStartedAt = currentTime
         advance(action)
+    }
+
+    override func didFinishUpdate() {
+        guard isWaitingForFirstRenderedFrame else { return }
+        isWaitingForFirstRenderedFrame = false
+
+        // SpriteKit commits the drawable immediately after this callback. Reveal
+        // the SKView on the next main-loop turn so an uninitialized black drawable
+        // can never become the first visible desktop-pet frame.
+        DispatchQueue.main.async { [weak self] in
+            self?.onFirstFrameRendered?()
+        }
     }
 
     private func advance(_ action: PetActionDefinition) {

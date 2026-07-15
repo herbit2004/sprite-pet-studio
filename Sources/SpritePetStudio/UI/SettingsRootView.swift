@@ -28,6 +28,11 @@ private enum SettingsDestination: String, Identifiable {
 struct SettingsRootView: View {
     @ObservedObject var model: AppModel
     @State private var destination: SettingsDestination = .projects
+    @State private var hoveredDestination: SettingsDestination?
+
+    private let destinations: [SettingsDestination] = [
+        .projects, .configurations, .general, .events
+    ]
 
     var body: some View {
         VStack(spacing: 0) {
@@ -51,14 +56,19 @@ struct SettingsRootView: View {
     }
 
     private var topNavigation: some View {
-        HStack(spacing: 8) {
-            ForEach([SettingsDestination.projects, .configurations, .general, .events]) { item in
+        HStack(spacing: 0) {
+            ForEach(Array(destinations.enumerated()), id: \.element.id) { index, item in
+                if index > 0 {
+                    Divider()
+                        .frame(height: 18)
+                        .padding(.horizontal, 4)
+                }
                 navigationButton(item)
             }
-            Spacer(minLength: 8)
+            Spacer(minLength: 12)
         }
         .padding(.horizontal, 18)
-        .padding(.vertical, 10)
+        .padding(.vertical, 8)
         .background(.bar)
     }
 
@@ -69,14 +79,23 @@ struct SettingsRootView: View {
             Label(item.title, systemImage: item.icon)
                 .font(.callout.weight(destination == item ? .semibold : .regular))
                 .foregroundStyle(destination == item ? StudioTheme.accent : Color.primary)
-                .frame(minWidth: 112, minHeight: 36)
-                .contentShape(Capsule())
+                .frame(minWidth: 112, minHeight: 40)
+                .contentShape(Rectangle())
                 .background(
-                    destination == item ? StudioTheme.accent.opacity(0.14) : Color.secondary.opacity(0.075),
-                    in: Capsule()
+                    hoveredDestination == item ? Color.secondary.opacity(0.08) : Color.clear,
+                    in: RoundedRectangle(cornerRadius: 8, style: .continuous)
                 )
+                .overlay(alignment: .bottom) {
+                    Capsule()
+                        .fill(StudioTheme.accent)
+                        .frame(width: 22, height: 2)
+                        .opacity(destination == item ? 1 : 0)
+                }
         }
         .buttonStyle(.plain)
+        .onHover { isHovered in
+            hoveredDestination = isHovered ? item : nil
+        }
     }
 
     @ViewBuilder

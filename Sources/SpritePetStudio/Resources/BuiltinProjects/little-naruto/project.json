@@ -447,6 +447,20 @@
           "minute": 0,
           "randomWeight": 1,
           "stringValue": ""
+        },
+        {
+          "cooldownSeconds": 0,
+          "distance": 160,
+          "hour": 12,
+          "id": "62F897D3-874F-4EAA-AC9E-71210EC32D6B",
+          "idleSeconds": 30,
+          "isEnabled": true,
+          "kind": "appLaunch",
+          "maximumIntervalSeconds": 45,
+          "minimumIntervalSeconds": 15,
+          "minute": 0,
+          "randomWeight": 1,
+          "stringValue": ""
         }
       ],
       "repeatCount": 1
@@ -532,7 +546,7 @@
           "stringValue": ""
         },
         {
-          "cooldownSeconds": 0,
+          "cooldownSeconds": 1,
           "distance": 160,
           "hour": 12,
           "id": "DE4E7C8D-ECC0-4CF3-9721-5CD51E860204",
@@ -738,15 +752,15 @@
       "interruption": "higherPriority",
       "isEnabled": true,
       "name": "等待",
-      "playback": "loop",
+      "playback": "once",
       "priority": 20,
       "triggers": [
         {
-          "cooldownSeconds": 60,
+          "cooldownSeconds": 0,
           "distance": 160,
           "hour": 12,
           "id": "10000000-0000-0000-0000-000000000602",
-          "idleSeconds": 30,
+          "idleSeconds": 5,
           "isEnabled": true,
           "kind": "random",
           "maximumIntervalSeconds": 90,
@@ -756,7 +770,7 @@
           "stringValue": ""
         }
       ],
-      "repeatCount": 1
+      "repeatCount": 3
     },
     {
       "frames": [
@@ -832,7 +846,7 @@
       "interruption": "higherPriority",
       "isEnabled": true,
       "name": "执行任务",
-      "playback": "loop",
+      "playback": "once",
       "priority": 55,
       "triggers": [
         {
@@ -850,7 +864,7 @@
           "stringValue": "task-running"
         }
       ],
-      "repeatCount": 1
+      "repeatCount": 3
     },
     {
       "frames": [
@@ -956,6 +970,20 @@
           "minute": 0,
           "randomWeight": 1,
           "stringValue": "review"
+        },
+        {
+          "cooldownSeconds": 0,
+          "distance": 160,
+          "hour": 12,
+          "id": "411BE618-8A8E-4913-938F-4976870AE91A",
+          "idleSeconds": 30,
+          "isEnabled": true,
+          "kind": "random",
+          "maximumIntervalSeconds": 45,
+          "minimumIntervalSeconds": 15,
+          "minute": 0,
+          "randomWeight": 0.6,
+          "stringValue": ""
         }
       ],
       "repeatCount": 1

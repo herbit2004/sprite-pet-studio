@@ -171,6 +171,7 @@ enum CodexV2Schema {
                 isEnabled: previous?.isEnabled ?? true,
                 framesPerSecond: previous?.framesPerSecond ?? codexSpec?.framesPerSecond ?? 8,
                 playback: previous?.playback ?? codexSpec?.playback ?? (actionLayout.key == project.defaultActionID ? .loop : .once),
+                repeatCount: previous?.repeatCount ?? 1,
                 priority: previous?.priority ?? codexSpec?.priority ?? (actionLayout.key == project.defaultActionID ? 0 : 50),
                 interruption: previous?.interruption ?? codexSpec?.interruption ?? .higherPriority,
                 frames: frames,

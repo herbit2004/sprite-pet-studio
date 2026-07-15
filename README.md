@@ -12,6 +12,13 @@
 
 > 运行环境：macOS 14（Sonoma）或更新版本；从源码构建需要 Xcode Command Line Tools 与 Swift 5.10 或更新版本。
 
+## v0.4.0 更新
+
+- NARUTO 与 DIMOO 两个内置模板采用同一套经过调校的动作播放次数和触发参数，同时保留各自独立的图像帧；
+- 桌宠窗口会等 SpriteKit 完成首帧渲染后再显示，避免启动时闪出未初始化的黑色画面；
+- 设置顶栏改为无填充的单行分区导航，保留完整点击热区，并提供悬停反馈和当前页面指示；
+- 通用设置新增版本卡片，可从 GitHub Pages 的固定 `version.json` 清单检查新版本，并直接打开下载或发布说明。
+
 ## v0.3.0 更新
 
 - 内置的 NARUTO 与 DIMOO 改为明确的只读模板：不能改名、编辑动作、归一化或删除，但仍可显示、复制和导出；
@@ -201,6 +208,14 @@ https://herbit2004.github.io/sprite-pet-studio/
 ```
 
 页面中的下载按钮先使用稳定的 `releases/latest/download/SpritePetStudio-macOS.zip` 地址，并通过 GitHub Releases API 补充最新版本号和文件大小。即使 API 暂时不可用，下载链接仍然有效。
+
+App 内的“检查更新”读取同一站点上的固定清单：
+
+```text
+https://herbit2004.github.io/sprite-pet-studio/version.json
+```
+
+`site/version.json` 中的 `version` 必须与 `Config/Info.plist` 和发布 Tag 保持一致；`downloadURL` 指向稳定的 latest-release 附件，`releaseNotesURL` 指向当前版本说明。当前检查器只获取这份公开 JSON，不上传设备信息或用户工程。
 
 ## 工程结构
 

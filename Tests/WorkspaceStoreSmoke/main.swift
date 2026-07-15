@@ -12,6 +12,7 @@ struct WorkspaceStoreSmoke {
         precondition(document.projects.count == 2)
         precondition(document.projects.allSatisfy(\.isReadOnlyTemplate))
         precondition(document.projects.allSatisfy { $0.atlas.imagePath.hasPrefix("builtin://") })
+        try assertTemplateRuntimeParametersMatch(document.projects)
 
         let template = document.projects[0]
         do {
@@ -58,5 +59,40 @@ struct WorkspaceStoreSmoke {
         }
 
         print("Workspace storage smoke test: OK")
+    }
+
+    private static func assertTemplateRuntimeParametersMatch(
+        _ templates: [PetProjectDefinition]
+    ) throws {
+        guard templates.count == 2 else { preconditionFailure("Expected two bundled templates") }
+        let firstActions = templates[0].actions
+        let secondActions = templates[1].actions
+        precondition(firstActions.count == secondActions.count)
+
+        for (first, second) in zip(firstActions, secondActions) {
+            precondition(first.id == second.id)
+            precondition(first.isEnabled == second.isEnabled)
+            precondition(first.framesPerSecond == second.framesPerSecond)
+            precondition(first.playback == second.playback)
+            precondition(first.repeatCount == second.repeatCount)
+            precondition(first.priority == second.priority)
+            precondition(first.interruption == second.interruption)
+            precondition(first.triggers == second.triggers)
+        }
+
+        let expectedRepeatCounts = ["waiting": 3, "running": 3]
+        for (actionID, count) in expectedRepeatCounts {
+            precondition(firstActions.first(where: { $0.id == actionID })?.repeatCount == count)
+        }
+        precondition(
+            firstActions.first(where: { $0.id == "waving" })?.triggers.contains(where: {
+                $0.kind == .appLaunch
+            }) == true
+        )
+        precondition(
+            firstActions.first(where: { $0.id == "review" })?.triggers.contains(where: {
+                $0.kind == .random
+            }) == true
+        )
     }
 }
