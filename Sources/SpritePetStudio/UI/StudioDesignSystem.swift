@@ -6,6 +6,16 @@ enum StudioTheme {
     static let cardRadius: CGFloat = 16
     static let pageSpacing: CGFloat = 18
     static let pagePadding: CGFloat = 24
+    static let windowBackgroundColor = NSColor(
+        name: NSColor.Name("SpritePetStudio.WindowBackground")
+    ) { appearance in
+        if appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua {
+            NSColor(srgbRed: 0.075, green: 0.078, blue: 0.085, alpha: 1)
+        } else {
+            NSColor(srgbRed: 0.973, green: 0.976, blue: 0.984, alpha: 1)
+        }
+    }
+    static let pageBackground = Color(nsColor: windowBackgroundColor)
 }
 struct StudioPageHeader<Trailing: View>: View {
     let eyebrow: String
@@ -142,20 +152,12 @@ struct StudioPill: View {
 }
 
 struct StudioPageBackground: View {
-    @Environment(\.colorScheme) private var colorScheme
-
     var body: some View {
-        Group {
-            if colorScheme == .dark {
-                Color(red: 0.075, green: 0.078, blue: 0.085)
-            } else {
-                // Keep the canvas consistently airy across macOS versions.
-                // `windowBackgroundColor` can resolve to a noticeably darker
-                // gray depending on the active system material.
-                Color(red: 0.973, green: 0.976, blue: 0.984)
-            }
-        }
-        .ignoresSafeArea()
+        // Keep the canvas consistently airy across macOS versions.
+        // `windowBackgroundColor` can resolve to a noticeably darker gray
+        // depending on the linked SDK and active system material.
+        StudioTheme.pageBackground
+            .ignoresSafeArea()
     }
 }
 

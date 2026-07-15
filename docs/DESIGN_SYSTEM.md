@@ -11,6 +11,7 @@
 - 页面标题统一使用 `StudioPageHeader`，包括眉题、标题、说明和右侧操作区。
 - 标签状态统一使用 `StudioPill`。
 - 页面背景统一使用 `StudioPageBackground`。
+- AppKit 窗口背景使用 `StudioTheme.windowBackgroundColor`，SwiftUI 顶栏和页面画布使用同源的 `StudioTheme.pageBackground`，不使用会随链接 SDK 改变的 `.bar` 材质。
 - 页面外边距 24 pt，主要区块间距 18 pt；列表与详情使用同样的 18 pt 间距。
 - 页面内容宽度应自适应窗口，不能挤压或移走顶部导航。
 

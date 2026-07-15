@@ -21,7 +21,7 @@ concurrency:
 jobs:
   release:
     name: Build and publish
-    runs-on: macos-15
+    runs-on: macos-26
     env:
       RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
       GH_TOKEN: ${{ github.token }}

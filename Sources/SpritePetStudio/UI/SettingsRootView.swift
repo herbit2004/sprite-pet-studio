@@ -91,7 +91,7 @@ struct SettingsRootView: View {
         }
         .padding(.horizontal, 18)
         .padding(.vertical, 8)
-        .background(.bar)
+        .background(StudioTheme.pageBackground)
     }
 
     private func navigationButton(_ item: SettingsDestination) -> some View {

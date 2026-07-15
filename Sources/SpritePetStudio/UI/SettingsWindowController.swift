@@ -14,6 +14,7 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
             defer: false
         )
         window.title = "桌宠工坊设置"
+        window.backgroundColor = StudioTheme.windowBackgroundColor
         window.contentViewController = hostingController
         window.minSize = NSSize(width: 920, height: 680)
         window.titlebarAppearsTransparent = true
