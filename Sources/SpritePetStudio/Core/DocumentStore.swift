@@ -25,6 +25,13 @@ final class DocumentStore {
         case readOnlyTemplate(String)
         case invalidCodexManifest(String)
         case invalidAtlas(width: Int, height: Int, expectedWidth: Int, expectedHeight: Int)
+        case unsupportedImportSelection(String)
+        case invalidImportJSON(file: String, reason: String)
+        case importAtlasMissing(folder: String, searched: [String])
+        case unsupportedImportAtlas(width: Int, height: Int)
+        case importDestinationExists(String)
+        case invalidProjectID(String)
+        case projectIDInUse(String)
 
         var errorDescription: String? {
             switch self {
@@ -35,9 +42,23 @@ final class DocumentStore {
             case .readOnlyTemplate(let name):
                 return "“\(name)”是只读模板。请先复制完整工程，再编辑动作或图集。"
             case .invalidCodexManifest(let reason):
-                return "不是可用的 Codex v2 工程：\(reason)"
+                return "不是可用的 Codex 工程：\(reason)"
             case .invalidAtlas(let width, let height, let expectedWidth, let expectedHeight):
                 return "图集必须是 \(expectedWidth) × \(expectedHeight)，当前是 \(width) × \(height)。"
+            case .unsupportedImportSelection(let path):
+                return "无法从“\(path)”导入。请选择工程文件夹、pet.json、path.json、studio.json、spritesheet.png 或 spritesheet.webp。"
+            case .invalidImportJSON(let file, let reason):
+                return "无法识别 \(file)：\(reason)"
+            case .importAtlasMissing(let folder, let searched):
+                return "导入失败：\(folder) 中缺少必需的图集文件。已查找：\(searched.joined(separator: "、"))。"
+            case .unsupportedImportAtlas(let width, let height):
+                return "无法识别 \(width) × \(height) 的图集布局。请提供匹配的 studio.json，或使用 Codex v1（1536 × 1872）/ v2（1536 × 2288）图集。"
+            case .importDestinationExists(let id):
+                return "导入目标“\(id)”已经存在。请换一个工程名称或先处理同名工程。"
+            case .invalidProjectID(let reason):
+                return "工程 ID 不可用：\(reason)"
+            case .projectIDInUse(let id):
+                return "工程 ID“\(id)”已经存在。"
             }
         }
     }
@@ -72,8 +93,9 @@ final class DocumentStore {
             )
         }
 
-        document.atlasConfigurations.removeAll { $0.id == CodexV2Schema.configuration.id }
-        document.atlasConfigurations.insert(CodexV2Schema.configuration, at: 0)
+        let builtInConfigurationIDs = Set(CodexSchemas.builtInConfigurations.map(\.id))
+        document.atlasConfigurations.removeAll { builtInConfigurationIDs.contains($0.id) }
+        document.atlasConfigurations.insert(contentsOf: CodexSchemas.builtInConfigurations, at: 0)
 
         let stateProjects = document.projects.map(CodexV2Schema.normalize)
         var personalProjects: [PetProjectDefinition] = []
@@ -126,8 +148,9 @@ final class DocumentStore {
             document.selectedProjectID = document.projects.first?.id ?? ""
         }
         for index in document.projects.indices where document.projects[index].configurationLibraryID == nil {
-            if document.projects[index].effectiveAtlasConfiguration.id == CodexV2Schema.configuration.id {
-                document.projects[index].configurationLibraryID = CodexV2Schema.configuration.id
+            let configurationID = document.projects[index].effectiveAtlasConfiguration.id
+            if builtInConfigurationIDs.contains(configurationID) {
+                document.projects[index].configurationLibraryID = configurationID
             }
         }
 
@@ -181,6 +204,12 @@ final class DocumentStore {
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         _ = try imageURL(for: project)
 
+        try writeWorkspaceMetadata(for: project, to: folder)
+    }
+
+    private func writeWorkspaceMetadata(for project: PetProjectDefinition, to folder: URL) throws {
+        guard !project.isReadOnlyTemplate else { return }
+
         var stored = project
         stored.isBuiltIn = false
         try JSONEncoder.spritePet.encode(stored)
@@ -190,7 +219,7 @@ final class DocumentStore {
             id: stored.id,
             displayName: stored.name,
             description: stored.projectDescription,
-            spriteVersionNumber: stored.effectiveAtlasConfiguration.compatibility == .codexV2 ? 2 : 0,
+            spriteVersionNumber: stored.effectiveAtlasConfiguration.compatibility.spriteVersionNumber,
             spritesheetPath: (stored.atlas.imagePath as NSString).lastPathComponent
         )
         try JSONEncoder.spritePet.encode(manifest)
@@ -200,6 +229,44 @@ final class DocumentStore {
     private func requireEditable(_ project: PetProjectDefinition) throws {
         guard !project.isReadOnlyTemplate else {
             throw StoreError.readOnlyTemplate(project.name)
+        }
+    }
+
+    /// Project IDs are immutable after creation and double as workspace folder
+    /// names, so creation and import must reject path-like or hidden values.
+    func validatedProjectID(_ rawValue: String) throws -> String {
+        let value = rawValue
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .precomposedStringWithCanonicalMapping
+        guard !value.isEmpty else {
+            throw StoreError.invalidProjectID("不能为空")
+        }
+        guard value != ".", value != "..", !value.hasPrefix(".") else {
+            throw StoreError.invalidProjectID("不能使用隐藏名称、“.”或“..”")
+        }
+        guard value.rangeOfCharacter(from: CharacterSet(charactersIn: "/:")) == nil,
+              value.rangeOfCharacter(from: .controlCharacters) == nil else {
+            throw StoreError.invalidProjectID("不能包含 /、: 或控制字符")
+        }
+        guard value.lengthOfBytes(using: .utf8) <= 255 else {
+            throw StoreError.invalidProjectID("UTF-8 长度不能超过 255 字节")
+        }
+        return value
+    }
+
+    func workspaceProjectIDExists(_ rawValue: String) -> Bool {
+        guard let value = try? validatedProjectID(rawValue),
+              let contents = try? FileManager.default.contentsOfDirectory(
+                at: projectsURL,
+                includingPropertiesForKeys: [.isDirectoryKey],
+                options: [.skipsHiddenFiles]
+              ) else { return false }
+        return contents.contains { url in
+            guard (try? url.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true else { return false }
+            return url.lastPathComponent.compare(
+                value,
+                options: [.caseInsensitive, .diacriticInsensitive]
+            ) == .orderedSame
         }
     }
 
@@ -462,46 +529,109 @@ final class DocumentStore {
         try png.write(to: destination, options: .atomic)
     }
 
-    func projectIdentifier(in projectJSONURL: URL) throws -> String {
-        let data = try Data(contentsOf: projectJSONURL)
-        if projectJSONURL.lastPathComponent == "pet.json" {
-            return try JSONDecoder.spritePet.decode(CodexPetManifest.self, from: data).id
-        }
-        return try JSONDecoder.spritePet.decode(PetProjectDefinition.self, from: data).id
+    /// Accepts a complete project folder or any of its public entry files.
+    /// Resolution is intentionally shared with `importProject` so the ID shown
+    /// by the UI always belongs to the exact project that will be imported.
+    func projectIdentifier(in selectionURL: URL) throws -> String {
+        try resolveImportSource(from: selectionURL).sourceID
     }
 
-    func importProject(from projectJSONURL: URL, as targetID: String? = nil) throws -> PetProjectDefinition {
-        let project: PetProjectDefinition
-        if projectJSONURL.lastPathComponent == "pet.json" {
-            project = try importCodexProject(from: projectJSONURL, targetID: targetID)
-        } else {
-            let data = try Data(contentsOf: projectJSONURL)
-            var imported = try JSONDecoder.spritePet.decode(PetProjectDefinition.self, from: data)
-            imported.id = targetID ?? imported.id
-            imported.isBuiltIn = false
+    func importProject(from selectionURL: URL, as targetID: String? = nil) throws -> PetProjectDefinition {
+        let source = try resolveImportSource(from: selectionURL)
+        let importedID = try validatedProjectID(targetID ?? source.sourceID)
+        let configuration = source.configuration
+        let atlasDefinition = AtlasDefinition(
+            imagePath: "project://spritesheet.png",
+            columns: configuration.cellsPerRow,
+            rows: configuration.rowCount,
+            cellWidth: configuration.cellWidth,
+            cellHeight: configuration.cellHeight,
+            filtering: source.studioProject?.atlas.filtering ?? .linear
+        )
 
-            let sourceFolder = projectJSONURL.deletingLastPathComponent()
-            let destination = projectsURL.appendingPathComponent(imported.id, isDirectory: true)
-            if FileManager.default.fileExists(atPath: destination.path) {
-                try FileManager.default.removeItem(at: destination)
-            }
-            try FileManager.default.copyItem(at: sourceFolder, to: destination)
-            if !imported.atlas.imagePath.hasPrefix("project://") {
-                imported.atlas.imagePath = "project://\((imported.atlas.imagePath as NSString).lastPathComponent)"
-            }
-            guard let image = NSImage(contentsOf: try imageURL(for: imported)) else {
-                throw StoreError.projectImageMissing(imported.atlas.imagePath)
-            }
-            try requireAtlas(image, definition: imported.atlas)
-            project = CodexV2Schema.normalize(imported)
+        guard let sourceImage = NSImage(contentsOf: source.atlasURL) else {
+            throw StoreError.projectImageMissing(source.atlasURL.path)
         }
-        try saveWorkspaceMetadata(for: project)
+        try requireAtlas(sourceImage, definition: atlasDefinition)
+
+        let sourceData = try Data(contentsOf: source.atlasURL)
+        let pngData: Data
+        if sourceData.starts(with: [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]) {
+            // Preserve existing PNG pixels and color metadata byte-for-byte.
+            pngData = sourceData
+        } else {
+            guard let normalizedAtlas = renderImage(
+                sourceImage,
+                sourceRect: NSRect(origin: .zero, size: sourceImage.size),
+                targetPixels: CGSize(width: configuration.atlasWidth, height: configuration.atlasHeight),
+                aspectFit: false
+            ), let converted = normalizedAtlas.representation(using: .png, properties: [:]) else {
+                throw StoreError.projectImageMissing(source.atlasURL.path)
+            }
+            pngData = converted
+        }
+
+        var base = source.studioProject ?? (try? bundledNaruto()) ?? PetProjectDefinition(
+            id: importedID,
+            name: source.displayName,
+            author: "",
+            projectDescription: source.projectDescription,
+            formatVersion: 2,
+            isBuiltIn: false,
+            atlas: atlasDefinition,
+            defaultActionID: configuration.actions.first?.key ?? "",
+            actions: []
+        )
+        base.id = importedID
+        base.name = source.displayName
+        base.projectDescription = source.projectDescription
+        base.isBuiltIn = false
+        base.atlas = atlasDefinition
+        base.atlasConfiguration = configuration
+        base.configurationLibraryID = configuration.isBuiltIn ? configuration.id : nil
+        base.isVisibleOnDesktop = false
+        base.desktopOriginX = nil
+        base.desktopOriginY = nil
+        let project = CodexV2Schema.normalize(
+            base,
+            using: configuration,
+            libraryID: configuration.isBuiltIn ? configuration.id : nil
+        )
+
+        let destination = projectsURL.appendingPathComponent(importedID, isDirectory: true)
+        guard !FileManager.default.fileExists(atPath: destination.path) else {
+            throw StoreError.importDestinationExists(importedID)
+        }
+        let staging = projectsURL.appendingPathComponent(".import-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: staging, withIntermediateDirectories: true)
+        defer {
+            if FileManager.default.fileExists(atPath: staging.path) {
+                try? FileManager.default.removeItem(at: staging)
+            }
+        }
+        try pngData.write(to: staging.appendingPathComponent("spritesheet.png"), options: .atomic)
+        try writeWorkspaceMetadata(for: project, to: staging)
+        try FileManager.default.moveItem(at: staging, to: destination)
+
+        frameImageCache.removeAllObjects()
         return project
     }
 
     func exportProject(_ project: PetProjectDefinition, to folder: URL) throws {
-        let destination = folder.appendingPathComponent(project.id, isDirectory: true)
-        try FileManager.default.createDirectory(at: destination, withIntermediateDirectories: true)
+        let exportID = try validatedProjectID(project.id)
+        let destination = folder.appendingPathComponent(exportID, isDirectory: true)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        let staging = folder.appendingPathComponent(".export-\(UUID().uuidString)", isDirectory: true)
+        let backup = folder.appendingPathComponent(".export-backup-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: staging, withIntermediateDirectories: true)
+        defer {
+            if FileManager.default.fileExists(atPath: staging.path) {
+                try? FileManager.default.removeItem(at: staging)
+            }
+            if FileManager.default.fileExists(atPath: backup.path) {
+                try? FileManager.default.removeItem(at: backup)
+            }
+        }
 
         var exported = CodexV2Schema.normalize(project)
         exported.isBuiltIn = false
@@ -510,7 +640,7 @@ final class DocumentStore {
             throw StoreError.projectImageMissing(imageSource.path)
         }
         try requireAtlas(image, definition: exported.atlas)
-        let imageDestination = destination.appendingPathComponent("spritesheet.png")
+        let imageDestination = staging.appendingPathComponent("spritesheet.png")
         try writePNG(
             image,
             to: imageDestination,
@@ -518,18 +648,36 @@ final class DocumentStore {
         )
 
         let manifest = CodexPetManifest(
-            id: project.id,
+            id: exportID,
             displayName: project.name,
             description: project.projectDescription,
-            spriteVersionNumber: exported.effectiveAtlasConfiguration.compatibility == .codexV2 ? 2 : 0,
+            spriteVersionNumber: exported.effectiveAtlasConfiguration.compatibility.spriteVersionNumber,
             spritesheetPath: "spritesheet.png"
         )
         try JSONEncoder.spritePet.encode(manifest)
-            .write(to: destination.appendingPathComponent("pet.json"), options: .atomic)
+            .write(to: staging.appendingPathComponent("pet.json"), options: .atomic)
 
         exported.atlas.imagePath = "project://spritesheet.png"
         try JSONEncoder.spritePet.encode(exported)
-            .write(to: destination.appendingPathComponent("studio.json"), options: .atomic)
+            .write(to: staging.appendingPathComponent("studio.json"), options: .atomic)
+
+        if FileManager.default.fileExists(atPath: destination.path) {
+            try FileManager.default.moveItem(at: destination, to: backup)
+            do {
+                try FileManager.default.moveItem(at: staging, to: destination)
+                try FileManager.default.removeItem(at: backup)
+            } catch {
+                if FileManager.default.fileExists(atPath: destination.path) {
+                    try? FileManager.default.removeItem(at: destination)
+                }
+                if FileManager.default.fileExists(atPath: backup.path) {
+                    try? FileManager.default.moveItem(at: backup, to: destination)
+                }
+                throw error
+            }
+        } else {
+            try FileManager.default.moveItem(at: staging, to: destination)
+        }
     }
 
     func createBlankProject(
@@ -539,6 +687,10 @@ final class DocumentStore {
         configuration: AtlasConfiguration,
         configurationLibraryID: String?
     ) throws -> PetProjectDefinition {
+        let projectID = try validatedProjectID(id)
+        guard !workspaceProjectIDExists(projectID) else {
+            throw StoreError.projectIDInUse(projectID)
+        }
         let atlas = AtlasDefinition(
             imagePath: "project://spritesheet.png",
             columns: max(1, configuration.cellsPerRow),
@@ -548,7 +700,7 @@ final class DocumentStore {
             filtering: .linear
         )
         var project = PetProjectDefinition(
-            id: id,
+            id: projectID,
             name: name,
             author: "",
             projectDescription: description,
@@ -579,7 +731,7 @@ final class DocumentStore {
         context.flushGraphics()
         NSGraphicsContext.restoreGraphicsState()
         let destination = projectsURL
-            .appendingPathComponent(id, isDirectory: true)
+            .appendingPathComponent(project.id, isDirectory: true)
             .appendingPathComponent("spritesheet.png")
         try FileManager.default.createDirectory(
             at: destination.deletingLastPathComponent(),
@@ -599,14 +751,24 @@ final class DocumentStore {
         id: String,
         name: String
     ) throws -> PetProjectDefinition {
+        let projectID = try validatedProjectID(id)
         guard let sourceImage = NSImage(contentsOf: try imageURL(for: source)) else {
             throw StoreError.projectImageMissing(source.atlas.imagePath)
         }
         try requireAtlas(sourceImage, definition: source.atlas)
 
-        let destinationFolder = projectsURL.appendingPathComponent(id, isDirectory: true)
-        try FileManager.default.createDirectory(at: destinationFolder, withIntermediateDirectories: true)
-        let destinationImage = destinationFolder.appendingPathComponent("spritesheet.png")
+        let destinationFolder = projectsURL.appendingPathComponent(projectID, isDirectory: true)
+        guard !FileManager.default.fileExists(atPath: destinationFolder.path) else {
+            throw StoreError.projectIDInUse(projectID)
+        }
+        let staging = projectsURL.appendingPathComponent(".duplicate-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: staging, withIntermediateDirectories: true)
+        defer {
+            if FileManager.default.fileExists(atPath: staging.path) {
+                try? FileManager.default.removeItem(at: staging)
+            }
+        }
+        let destinationImage = staging.appendingPathComponent("spritesheet.png")
         try writePNG(
             sourceImage,
             to: destinationImage,
@@ -617,14 +779,15 @@ final class DocumentStore {
         )
 
         var copy = source
-        copy.id = id
+        copy.id = projectID
         copy.name = name
         copy.isBuiltIn = false
         copy.atlas.imagePath = "project://spritesheet.png"
         copy.isVisibleOnDesktop = false
         copy.desktopOriginX = nil
         copy.desktopOriginY = nil
-        try saveWorkspaceMetadata(for: copy)
+        try writeWorkspaceMetadata(for: copy, to: staging)
+        try FileManager.default.moveItem(at: staging, to: destinationFolder)
         frameImageCache.removeAllObjects()
         return copy
     }
@@ -719,68 +882,229 @@ final class DocumentStore {
         frameImageCache.removeAllObjects()
     }
 
-    private func importCodexProject(from petJSONURL: URL, targetID: String?) throws -> PetProjectDefinition {
-        let data = try Data(contentsOf: petJSONURL)
-        var manifest = try JSONDecoder.spritePet.decode(CodexPetManifest.self, from: data)
-        manifest.id = targetID ?? manifest.id
-        let sourceAtlasURL = petJSONURL.deletingLastPathComponent()
-            .appendingPathComponent(manifest.spritesheetPath)
-        guard let sourceImage = NSImage(contentsOf: sourceAtlasURL) else {
-            throw StoreError.projectImageMissing(sourceAtlasURL.path)
-        }
-        let studioURL = petJSONURL.deletingLastPathComponent().appendingPathComponent("studio.json")
-        let studioTemplate: PetProjectDefinition?
-        if FileManager.default.fileExists(atPath: studioURL.path) {
-            studioTemplate = try? JSONDecoder.spritePet.decode(
-                PetProjectDefinition.self,
-                from: Data(contentsOf: studioURL)
-            )
-        } else {
-            studioTemplate = try? bundledNaruto()
-        }
+    private struct ResolvedImportSource {
+        let folderURL: URL
+        let atlasURL: URL
+        let manifest: CodexPetManifest?
+        let studioProject: PetProjectDefinition?
         let configuration: AtlasConfiguration
-        if let embedded = studioTemplate?.atlasConfiguration {
-            configuration = embedded
-        } else {
-            guard manifest.spriteVersionNumber == 2 else {
-                throw StoreError.invalidCodexManifest("自定义图集需要同目录的 studio.json")
+        let sourceID: String
+        let displayName: String
+        let projectDescription: String
+    }
+
+    private func resolveImportSource(from selectionURL: URL) throws -> ResolvedImportSource {
+        let fileManager = FileManager.default
+        var isDirectory: ObjCBool = false
+        guard fileManager.fileExists(atPath: selectionURL.path, isDirectory: &isDirectory) else {
+            throw StoreError.unsupportedImportSelection(selectionURL.path)
+        }
+
+        let folderURL = isDirectory.boolValue
+            ? selectionURL
+            : selectionURL.deletingLastPathComponent()
+        let selectedExtension = isDirectory.boolValue
+            ? ""
+            : selectionURL.pathExtension.lowercased()
+        let imageExtensions = Set(["png", "webp"])
+        guard isDirectory.boolValue || selectedExtension == "json" || imageExtensions.contains(selectedExtension) else {
+            throw StoreError.unsupportedImportSelection(selectionURL.lastPathComponent)
+        }
+
+        var manifest: CodexPetManifest?
+        var studioProject: PetProjectDefinition?
+        var selectedJSONFailure: String?
+        if selectedExtension == "json" {
+            do {
+                let data = try Data(contentsOf: selectionURL)
+                switch selectionURL.lastPathComponent.lowercased() {
+                case "studio.json":
+                    do {
+                        studioProject = try JSONDecoder.spritePet.decode(PetProjectDefinition.self, from: data)
+                    } catch {
+                        selectedJSONFailure = "不是有效的 SpritePet Studio 工程配置（\(error.localizedDescription)）"
+                    }
+                case "pet.json", "path.json":
+                    do {
+                        manifest = try JSONDecoder.spritePet.decode(CodexPetManifest.self, from: data)
+                    } catch {
+                        selectedJSONFailure = "不是有效的 Codex manifest（\(error.localizedDescription)）"
+                    }
+                default:
+                    manifest = try? JSONDecoder.spritePet.decode(CodexPetManifest.self, from: data)
+                    if manifest == nil {
+                        studioProject = try? JSONDecoder.spritePet.decode(PetProjectDefinition.self, from: data)
+                    }
+                    if manifest == nil, studioProject == nil {
+                        selectedJSONFailure = "内容既不匹配 pet.json，也不匹配 studio.json"
+                    }
+                }
+            } catch {
+                selectedJSONFailure = error.localizedDescription
             }
-            configuration = CodexV2Schema.configuration
         }
-        let atlasDefinition = AtlasDefinition(
-            imagePath: "project://spritesheet.png",
-            columns: configuration.cellsPerRow,
-            rows: configuration.rowCount,
-            cellWidth: configuration.cellWidth,
-            cellHeight: configuration.cellHeight,
-            filtering: studioTemplate?.atlas.filtering ?? .linear
-        )
-        try requireAtlas(sourceImage, definition: atlasDefinition)
 
-        let destination = projectsURL.appendingPathComponent(manifest.id, isDirectory: true)
-        try FileManager.default.createDirectory(at: destination, withIntermediateDirectories: true)
-        let atlasDestination = destination.appendingPathComponent("spritesheet.png")
-        try writePNG(
-            sourceImage,
-            to: atlasDestination,
-            pixelSize: CGSize(width: configuration.atlasWidth, height: configuration.atlasHeight)
-        )
-
-        frameImageCache.removeAllObjects()
-        if var studioTemplate {
-            studioTemplate.id = manifest.id
-            studioTemplate.name = manifest.displayName
-            studioTemplate.projectDescription = manifest.description
-            studioTemplate.isBuiltIn = false
-            studioTemplate.atlas = atlasDefinition
-            studioTemplate.atlasConfiguration = configuration
-            return CodexV2Schema.normalize(studioTemplate, using: configuration)
+        // Sidecar JSON files enrich an import but are not required. Corrupt
+        // sidecars are ignored when the user selected a folder or the atlas;
+        // selecting that corrupt JSON directly still reports the error above.
+        if manifest == nil {
+            for filename in ["pet.json", "path.json"] {
+                let candidate = folderURL.appendingPathComponent(filename)
+                guard candidate.standardizedFileURL != selectionURL.standardizedFileURL,
+                      fileManager.fileExists(atPath: candidate.path),
+                      let data = try? Data(contentsOf: candidate),
+                      let decoded = try? JSONDecoder.spritePet.decode(CodexPetManifest.self, from: data) else {
+                    continue
+                }
+                manifest = decoded
+                break
+            }
         }
-        return CodexV2Schema.makeProject(
+        if studioProject == nil {
+            let candidate = folderURL.appendingPathComponent("studio.json")
+            if candidate.standardizedFileURL != selectionURL.standardizedFileURL,
+               fileManager.fileExists(atPath: candidate.path),
+               let data = try? Data(contentsOf: candidate) {
+                studioProject = try? JSONDecoder.spritePet.decode(PetProjectDefinition.self, from: data)
+            }
+        }
+
+        var atlasCandidates: [URL] = []
+        func appendAtlasCandidate(_ url: URL) {
+            let standardized = url.standardizedFileURL
+            guard !atlasCandidates.contains(where: { $0.standardizedFileURL == standardized }) else { return }
+            atlasCandidates.append(url)
+        }
+        func appendRelativeAtlasCandidate(_ path: String) {
+            let relative = path.replacingOccurrences(of: "project://", with: "")
+            guard !relative.isEmpty,
+                  !relative.hasPrefix("builtin://"),
+                  !(relative as NSString).isAbsolutePath else { return }
+            let candidate = folderURL.appendingPathComponent(relative).standardizedFileURL
+            let rootPath = folderURL.standardizedFileURL.path
+            guard candidate.path.hasPrefix(rootPath + "/") else { return }
+            appendAtlasCandidate(candidate)
+        }
+        if imageExtensions.contains(selectedExtension) {
+            appendAtlasCandidate(selectionURL)
+        }
+        if let path = manifest?.spritesheetPath, !path.isEmpty {
+            appendRelativeAtlasCandidate(path)
+        }
+        if let path = studioProject?.atlas.imagePath, !path.isEmpty {
+            appendRelativeAtlasCandidate(path)
+        }
+        appendAtlasCandidate(folderURL.appendingPathComponent("spritesheet.png"))
+        appendAtlasCandidate(folderURL.appendingPathComponent("spritesheet.webp"))
+
+        guard let atlasURL = atlasCandidates.first(where: { candidate in
+            var candidateIsDirectory: ObjCBool = false
+            return fileManager.fileExists(atPath: candidate.path, isDirectory: &candidateIsDirectory)
+                && !candidateIsDirectory.boolValue
+        }) else {
+            if let selectedJSONFailure {
+                throw StoreError.invalidImportJSON(
+                    file: selectionURL.lastPathComponent,
+                    reason: "\(selectedJSONFailure)；同目录也没有可用于降级导入的 spritesheet.png / .webp"
+                )
+            }
+            let searched = atlasCandidates.isEmpty
+                ? ["spritesheet.png", "spritesheet.webp"]
+                : atlasCandidates.map(\.lastPathComponent)
+            throw StoreError.importAtlasMissing(
+                folder: folderURL.path,
+                searched: Array(Set(searched)).sorted()
+            )
+        }
+        guard let atlasImage = NSImage(contentsOf: atlasURL) else {
+            throw StoreError.projectImageMissing(atlasURL.path)
+        }
+        let dimensions = pixelDimensions(of: atlasImage)
+
+        let configuration: AtlasConfiguration
+        if let embedded = studioProject?.atlasConfiguration {
+            let expectedWidth = embedded.atlasWidth
+            let expectedHeight = embedded.atlasHeight
+            guard dimensions.width == expectedWidth, dimensions.height == expectedHeight else {
+                throw StoreError.invalidAtlas(
+                    width: dimensions.width,
+                    height: dimensions.height,
+                    expectedWidth: expectedWidth,
+                    expectedHeight: expectedHeight
+                )
+            }
+            configuration = embedded
+        } else if let studioProject,
+                  let inferred = inferredConfiguration(from: studioProject),
+                  inferred.atlasWidth == dimensions.width,
+                  inferred.atlasHeight == dimensions.height {
+            configuration = inferred
+        } else if let standard = CodexSchemas.configuration(
+            forAtlasWidth: dimensions.width,
+            height: dimensions.height
+        ) {
+            configuration = standard
+        } else {
+            throw StoreError.unsupportedImportAtlas(width: dimensions.width, height: dimensions.height)
+        }
+
+        let folderName = folderURL.lastPathComponent.isEmpty ? "pet" : folderURL.lastPathComponent
+        let manifestID = manifest?.id.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let studioID = studioProject?.id.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let sourceID = !manifestID.isEmpty ? manifestID : (!studioID.isEmpty ? studioID : folderName)
+        let manifestName = manifest?.displayName.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let studioName = studioProject?.name.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let displayName = !manifestName.isEmpty ? manifestName : (!studioName.isEmpty ? studioName : folderName)
+        let manifestDescription = manifest?.description.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let studioDescription = studioProject?.projectDescription.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+
+        return ResolvedImportSource(
+            folderURL: folderURL,
+            atlasURL: atlasURL,
             manifest: manifest,
-            atlasPath: "project://spritesheet.png",
-            settingsTemplate: nil
+            studioProject: studioProject,
+            configuration: configuration,
+            sourceID: sourceID,
+            displayName: displayName,
+            projectDescription: !manifestDescription.isEmpty ? manifestDescription : studioDescription
         )
+    }
+
+    private func inferredConfiguration(from project: PetProjectDefinition) -> AtlasConfiguration? {
+        guard project.atlas.columns > 0,
+              project.atlas.rows > 0,
+              project.atlas.cellWidth > 0,
+              project.atlas.cellHeight > 0,
+              !project.actions.isEmpty else { return nil }
+
+        let actions = project.actions.map { action -> AtlasActionConfiguration in
+            let rows = action.frames.map(\.row)
+            let occupiedRows: Int
+            if let minimum = rows.min(), let maximum = rows.max() {
+                occupiedRows = max(1, maximum - minimum + 1)
+            } else {
+                occupiedRows = max(1, Int(ceil(Double(max(1, action.frames.count)) / Double(project.atlas.columns))))
+            }
+            return AtlasActionConfiguration(
+                name: action.name,
+                key: action.id,
+                frameCount: max(1, action.frames.count),
+                occupiedRows: occupiedRows
+            )
+        }
+        let configuration = AtlasConfiguration(
+            id: project.configurationLibraryID ?? "\(project.id)-layout",
+            name: "\(project.name) 图集配置",
+            configurationDescription: "从导入的 studio.json 恢复。",
+            isBuiltIn: false,
+            compatibility: .spritePetStudio,
+            cellWidth: project.atlas.cellWidth,
+            cellHeight: project.atlas.cellHeight,
+            actions: actions
+        )
+        guard configuration.cellsPerRow == project.atlas.columns,
+              configuration.rowCount == project.atlas.rows else { return nil }
+        return configuration
     }
 
     private func writeAtlas(

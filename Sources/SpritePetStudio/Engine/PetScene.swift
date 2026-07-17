@@ -12,6 +12,7 @@ final class PetScene: SKScene {
     private var frameStartedAt: TimeInterval?
     private var lastUpdateTime: TimeInterval = 0
     private var viewportScale: CGFloat = 1
+    private var isManualPreviewActive = false
 
     var onActionFinished: ((String) -> Void)?
     var currentActionID: String? { currentAction?.id }
@@ -40,6 +41,7 @@ final class PetScene: SKScene {
         frameIndex = 0
         completedPasses = 0
         frameStartedAt = nil
+        isManualPreviewActive = false
         if let action = project.defaultAction {
             play(action, force: true, restart: true)
         }
@@ -63,6 +65,22 @@ final class PetScene: SKScene {
     }
 
     func play(_ action: PetActionDefinition, force: Bool = false, restart: Bool = true) {
+        guard !isManualPreviewActive else { return }
+        beginPlayback(action, force: force, restart: restart)
+    }
+
+    /// Explicit previews form a short exclusive session. Live trigger events,
+    /// drag actions and mouse-angle tracking cannot steal the scene until the
+    /// requested action has completed one pass. A newer explicit preview may
+    /// still replace the current preview immediately.
+    func playPreviewOnce(_ action: PetActionDefinition) {
+        let preview = action.manualPreviewCopy()
+        guard !preview.playableFrames.isEmpty else { return }
+        isManualPreviewActive = true
+        beginPlayback(preview, force: true, restart: true)
+    }
+
+    private func beginPlayback(_ action: PetActionDefinition, force: Bool, restart: Bool) {
         let frames = action.playableFrames
         guard action.isEnabled, !frames.isEmpty else { return }
 
@@ -87,11 +105,13 @@ final class PetScene: SKScene {
     }
 
     func returnToDefault(force: Bool = true) {
+        guard !isManualPreviewActive else { return }
         guard let action = project?.defaultAction else { return }
         play(action, force: force, restart: currentAction?.id != action.id)
     }
 
     func setAngleAction(_ action: PetActionDefinition, angleDegrees: Double) {
+        guard !isManualPreviewActive else { return }
         if currentAction?.id != action.id {
             play(action, force: action.priority >= currentPriority, restart: false)
         }
@@ -112,7 +132,10 @@ final class PetScene: SKScene {
         lastUpdateTime = currentTime
         guard let action = currentAction,
               action.playback != .angleControlled,
-              action.playableFrames.count > 1 else {
+              !action.playableFrames.isEmpty else {
+            return
+        }
+        if action.playableFrames.count == 1, action.playback != .once {
             return
         }
 
@@ -140,6 +163,9 @@ final class PetScene: SKScene {
             if frameIndex >= frames.count - 1 {
                 completedPasses += 1
                 if completedPasses >= max(1, action.repeatCount) {
+                    if isManualPreviewActive {
+                        isManualPreviewActive = false
+                    }
                     onActionFinished?(action.id)
                     return
                 }

@@ -177,13 +177,12 @@ final class AppModel: ObservableObject {
         saveCancellable?.cancel()
     }
 
-    func playAction(id: String, projectID: String? = nil, force: Bool = true) {
+    func playAction(id: String, projectID: String? = nil) {
         let targetID = projectID ?? document.selectedProjectID
         guard let project = document.projects.first(where: { $0.id == targetID }),
               let action = project.actions.first(where: { $0.id == id }),
               let window = petWindows[targetID] else { return }
-        if force { window.playForce(action) }
-        else { window.play(action, restart: true) }
+        window.playPreviewOnce(action)
         systemMonitor.recordPetInteraction()
     }
 
@@ -441,13 +440,18 @@ final class AppModel: ObservableObject {
 
     func importProject() {
         let panel = NSOpenPanel()
-        panel.title = "选择 Codex v2 工程的 pet.json"
-        panel.allowedContentTypes = [.json]
+        panel.title = "导入桌宠工程"
+        panel.message = "可选择工程文件夹，或 pet.json、path.json、studio.json、spritesheet.png / .webp 中的任意一个文件。"
+        panel.prompt = "导入"
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = true
+        panel.allowedContentTypes = [.json, .png, UTType(filenameExtension: "webp")!]
         panel.allowsMultipleSelection = false
         guard panel.runModal() == .OK, let url = panel.url else { return }
         do {
-            let sourceID = try store.projectIdentifier(in: url)
-            let targetID = document.projects.contains(where: { $0.id == sourceID })
+            let rawSourceID = try store.projectIdentifier(in: url)
+            let sourceID = (try? store.validatedProjectID(rawSourceID)) ?? slug(rawSourceID)
+            let targetID = projectIDConflicts(sourceID)
                 ? uniqueProjectID(base: "\(sourceID)-imported")
                 : sourceID
             var project = try store.importProject(from: url, as: targetID)
@@ -458,9 +462,9 @@ final class AppModel: ObservableObject {
             if let library = document.atlasConfigurations.first(where: { $0.id == embedded.id }),
                library == embedded {
                 project.configurationLibraryID = library.id
-            } else if embedded.id == CodexV2Schema.configuration.id {
-                project.atlasConfiguration = CodexV2Schema.configuration
-                project.configurationLibraryID = CodexV2Schema.configuration.id
+            } else if let builtIn = CodexSchemas.builtInConfigurations.first(where: { $0.id == embedded.id }) {
+                project.atlasConfiguration = builtIn
+                project.configurationLibraryID = builtIn.id
             } else {
                 let alert = NSAlert()
                 alert.messageText = "这个工程使用配置库之外的图集配置"
@@ -877,12 +881,20 @@ final class AppModel: ObservableObject {
     private func uniqueProjectID(base: String) -> String {
         var candidate = base.isEmpty ? "pet" : base
         var suffix = 2
-        let ids = Set(document.projects.map(\.id))
-        while ids.contains(candidate) {
+        while projectIDConflicts(candidate) {
             candidate = "\(base)-\(suffix)"
             suffix += 1
         }
         return candidate
+    }
+
+    private func projectIDConflicts(_ candidate: String) -> Bool {
+        document.projects.contains { project in
+            project.id.compare(
+                candidate,
+                options: [.caseInsensitive, .diacriticInsensitive]
+            ) == .orderedSame
+        } || store.workspaceProjectIDExists(candidate)
     }
 
     private func slug(_ value: String) -> String {

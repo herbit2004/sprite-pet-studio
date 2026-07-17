@@ -20,8 +20,7 @@ struct ProjectSettingsView: View {
                     Section("基本信息") {
                         TextField("工程名称", text: project.name)
                         TextField("作者", text: project.author)
-                        TextField("工程 ID", text: project.id)
-                            .disabled(project.wrappedValue.isBuiltIn)
+                        LabeledContent("内部工程 ID", value: project.wrappedValue.id)
                         TextField("说明", text: project.projectDescription, axis: .vertical)
                             .lineLimit(2...5)
                         LabeledContent("默认动作", value: "常态（idle）")
@@ -43,8 +42,9 @@ struct ProjectSettingsView: View {
                     }
 
                     Section("导入与导出") {
-                        Text("导入时选择 Codex 工程目录里的 pet.json。应用会读取同目录的图集，并在内部统一保存为一张 spritesheet.png。")
+                        Text("导入时可以选择整个工程文件夹，或其中的 pet.json、path.json、studio.json、spritesheet.png / .webp。应用会自动查找同目录文件；只有图集是必需的，缺少 JSON 时会按 Codex v1/v2 标准布局降级恢复。")
                         Text("导出目录包含 pet.json、spritesheet.png 和 studio.json。前两者可直接供 Codex 使用；studio.json 保存本软件的触发器、播放方式，以及尚未归一化的逐帧调整。")
+                        Text("工程 ID 在创建或导入时确定，此后保持只读；个人工程目录、pet.json、studio.json 和导出文件夹统一使用这一个 ID。")
                         Text("单帧 PNG 只作为编辑入口：导入后会立即写入大图对应格位，不会在工程里留下独立帧文件。")
                     }
                 }

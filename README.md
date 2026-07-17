@@ -8,9 +8,17 @@
 
 一个原生 macOS 桌宠运行器与逐帧图集编辑器。它可以同时在桌面上运行多个独立桌宠；每个工程都有自己的图集、动作库、触发器、窗口位置和显示开关。
 
-首次启动即内置 `NARUTO 小鸣人` 与 `DIMOO 心动特调` 两个只读模板，并提供与 Codex v2 宠物图集的互通能力。模板可以直接在桌面运行，也可以复制为完全独立、可逐帧编辑的个人工程。
+首次启动即内置 `NARUTO 小鸣人` 与 `DIMOO 心动特调` 两个只读模板，并提供与 Codex v1/v2 宠物图集的互通能力。模板可以直接在桌面运行，也可以复制为完全独立、可逐帧编辑的个人工程。
 
 > 运行环境：macOS 14（Sonoma）或更新版本；从源码构建需要 Xcode Command Line Tools 与 Swift 5.10 或更新版本。
+
+## v0.6.0 更新
+
+- 工程导入不再要求必须点选 `pet.json`：现在可直接选择工程文件夹，或 `pet.json`、`path.json`、`studio.json`、`spritesheet.png` / `.webp` 中的任意一个入口；应用会自动发现同目录的其他文件；
+- `spritesheet` 成为唯一必需文件。缺少或无法读取 JSON 时，会根据图集尺寸自动匹配 Codex v1（8 × 9）或 Codex v2（8 × 11）标准布局，并在无法降级时给出具体缺失文件或尺寸错误；
+- 动作编辑器的“播放整个动作”、桌宠右键菜单和 Dock 菜单现在都会以临时最高优先级完整播放一遍所选动作，不受该动作保存的循环次数、启用状态、优先级和打断规则影响，也不会修改工程配置；
+- 工程身份恢复为一套不可编辑的 ID：同一个 ID 同时用于运行状态、个人工程目录、`pet.json`、`studio.json` 和导出文件夹；用户仍可独立修改显示名称与描述；
+- 导入、重复导出和工程复制使用完整写入后再替换的事务流程，避免失败时留下半个工程或旧导出残留。
 
 ## v0.5.3 更新
 
@@ -191,20 +199,21 @@ swift run SpritePetStudio
 
 ### 发布一个新版本
 
-版本使用语义化 Tag，例如 `v0.2.0`。Tag 必须与 `Config/Info.plist` 中的 `CFBundleShortVersionString` 完全一致，否则 Release 工作流会主动失败，避免版本号与二进制不一致。
+版本使用语义化 Tag，例如 `vX.Y.Z`。Tag 必须与 `Config/Info.plist` 中的 `CFBundleShortVersionString` 完全一致，否则 Release 工作流会主动失败，避免版本号与二进制不一致。
 
 ```bash
-# 1. 修改 Config/Info.plist 中的版本号并提交到 main
+# 1. 把 VERSION 换成 Config/Info.plist 中的新版本号并提交到 main
+VERSION=X.Y.Z
 git add Config/Info.plist
-git commit -m "Bump version to 0.2.0"
+git commit -m "Release SpritePet Studio v${VERSION}"
 git push origin main
 
 # 2. 在准备发布的 main 提交上创建并推送 Tag
-git tag -a v0.2.0 -m "SpritePet Studio v0.2.0"
-git push origin v0.2.0
+git tag -a "v${VERSION}" -m "SpritePet Studio v${VERSION}"
+git push origin "v${VERSION}"
 ```
 
-推送 Tag 后，Release 工作流自动执行 `make release`，并创建标题为 `SpritePet Studio v0.2.0` 的 GitHub Release。发布说明由 GitHub 根据上一个 Tag 以来的 Pull Request 自动生成，分类规则位于 `.github/release.yml`。
+推送 Tag 后，Release 工作流自动执行 `make release`，并创建标题为 `SpritePet Studio vX.Y.Z` 的 GitHub Release。发布说明由 GitHub 根据上一个 Tag 以来的 Pull Request 自动生成，分类规则位于 `.github/release.yml`。
 
 每个正式 Release 发布的是：
 
@@ -215,7 +224,7 @@ git push origin v0.2.0
 如果工作流中断，可以在 GitHub Actions 页面重新运行，或者通过 CLI 指定已经存在的 Tag：
 
 ```bash
-gh workflow run release.yml -f tag=v0.2.0
+gh workflow run release.yml -f tag=vX.Y.Z
 ```
 
 重复运行不会创建重复 Release；工作流会覆盖同名 ZIP 和校验文件。
@@ -282,12 +291,14 @@ sprite-pet-studio/
 - 每个工程独立保存图集、桌面位置、显示开关、动作库和触发规则
 - 30 / 60 / 120 FPS 渲染；动作可设置原画帧率、指定播放次数或持续循环、优先级和打断规则
 - 配置库可定义动作顺序、标签键、帧数、占用排数和单格尺寸；图集网格自动计算
-- 内置只读 Codex v2 配置：8 列 × 11 排、每格 192 × 208 px
-- 工程库支持透明空工程、新建、复制、重命名、删除、配置关联状态和交互预览
+- 内置只读 Codex v1 / v2 配置：v1 为 8 列 × 9 排，v2 为 8 列 × 11 排；每格均为 192 × 208 px
+- 工程导入支持选择文件夹、JSON 或 `spritesheet.png` / `.webp`；缺少配置时可按标准 v1/v2 图集尺寸恢复
+- 工程库支持透明空工程、新建、复制、修改显示名称与描述、删除、配置关联状态和交互预览；内部工程 ID 始终只读
 - 内置模板与个人工程分层管理；模板只读运行，复制后在用户工作区生成可编辑的完整工程
 - 逐帧预览、整体缩放、横向/纵向缩放、X/Y 位移、停留时间调整；支持 ⌘ 多选帧并按各帧原值批量增减，可单帧 PNG 导入/导出
 - “归一化并写入图集”会将逐帧草稿缩放和位移永久烘焙到 `spritesheet.png`；“复原参数”只清除草稿参数
 - 鼠标靠近、16 方向视线、单击、双击、右击、拖动、随机、空闲、定时和系统事件触发；离散事件可单独设置触发延迟
+- 动作编辑器、桌宠右键菜单和 Dock 菜单均可临时以最高优先级完整预览任意动作一遍
 - 菜单栏可快速显示/隐藏桌宠、播放动作和打开设置
 
 ## 桌宠工程格式
@@ -302,6 +313,8 @@ my-pet/
 ```
 
 - `spritesheet.png` 是所有帧的唯一来源；单帧 PNG 仅用于导入/导出编辑。
+- 工程 ID 在创建或导入时确定，此后不可编辑；个人工程目录名、两个 JSON 内的 ID 与导出文件夹名始终一致。
+- 导入时可以选择整个工程文件夹或上述任意文件。只有图集必需；JSON 缺失时应用会尝试按 Codex v1/v2 标准尺寸恢复布局。
 - 使用 Codex v2 配置时，`pet.json` 和 `spritesheet.png` 可直接交给 Codex；Codex 会忽略附加的 `studio.json`。
 - 自定义图集配置必须保留 `studio.json`，以记录动作布局；这类工程不保证被 Codex 固定协议识别。
 - 图集格位、配置库与归一化规则的完整说明见 [工程格式文档](docs/PROJECT_FORMAT.md)。

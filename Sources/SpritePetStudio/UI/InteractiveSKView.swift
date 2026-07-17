@@ -7,6 +7,8 @@ final class InteractiveSKView: SKView {
     var onWindowMoved: ((CGPoint) -> Void)?
     var onInteraction: (() -> Void)?
     var onOpenSettings: (() -> Void)?
+    var contextActionsProvider: (() -> [PetActionDefinition])?
+    var onPlayAction: ((String) -> Void)?
     var projectID: String?
 
     private var trackingAreaReference: NSTrackingArea?
@@ -108,11 +110,32 @@ final class InteractiveSKView: SKView {
         )
         settingsItem.target = self
         menu.addItem(settingsItem)
+
+        let actions = contextActionsProvider?() ?? []
+        if !actions.isEmpty {
+            menu.addItem(.separator())
+            for action in actions {
+                let actionItem = NSMenuItem(
+                    title: "播放：\(action.name)",
+                    action: #selector(playActionFromContextMenu(_:)),
+                    keyEquivalent: ""
+                )
+                actionItem.target = self
+                actionItem.representedObject = action.id
+                actionItem.isEnabled = !action.frames.isEmpty
+                menu.addItem(actionItem)
+            }
+        }
         NSMenu.popUpContextMenu(menu, with: event, for: self)
     }
 
     @objc private func openSettingsFromContextMenu() {
         onOpenSettings?()
+    }
+
+    @objc private func playActionFromContextMenu(_ sender: NSMenuItem) {
+        guard let actionID = sender.representedObject as? String else { return }
+        onPlayAction?(actionID)
     }
 
     private func post(_ type: PetEventType) {

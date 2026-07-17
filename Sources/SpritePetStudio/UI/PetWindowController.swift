@@ -53,6 +53,14 @@ final class PetWindowController {
         skView.ignoresSiblingOrder = true
         skView.eventBus = bus
         skView.projectID = projectID
+        skView.contextActionsProvider = { [weak self] in
+            self?.currentProject?.actions ?? []
+        }
+        skView.onPlayAction = { [weak self] actionID in
+            guard let self,
+                  let action = currentProject?.actions.first(where: { $0.id == actionID }) else { return }
+            playPreviewOnce(action)
+        }
         skView.presentScene(scene)
         scene.onActionFinished = { [weak scene] _ in
             scene?.returnToDefault()
@@ -124,8 +132,8 @@ final class PetWindowController {
         scene.play(action, force: force, restart: restart)
     }
 
-    func playForce(_ action: PetActionDefinition) {
-        scene.play(action, force: true, restart: true)
+    func playPreviewOnce(_ action: PetActionDefinition) {
+        scene.playPreviewOnce(action)
     }
 
     func controlAngle(_ action: PetActionDefinition, angleDegrees: Double) {

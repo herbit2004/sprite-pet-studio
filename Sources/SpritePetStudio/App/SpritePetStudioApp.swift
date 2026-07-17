@@ -2,6 +2,16 @@ import AppKit
 import Carbon
 import SwiftUI
 
+private final class DockActionRoute: NSObject {
+    let projectID: String
+    let actionID: String
+
+    init(projectID: String, actionID: String) {
+        self.projectID = projectID
+        self.actionID = actionID
+    }
+}
+
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let model = AppModel()
@@ -29,6 +39,42 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         )
         settingsItem.target = self
         menu.addItem(settingsItem)
+
+        menu.addItem(.separator())
+        if model.visibleProjects.isEmpty {
+            let emptyItem = NSMenuItem(
+                title: "没有正在显示的桌宠",
+                action: nil,
+                keyEquivalent: ""
+            )
+            emptyItem.isEnabled = false
+            menu.addItem(emptyItem)
+        } else {
+            for project in model.visibleProjects {
+                let projectItem = NSMenuItem(
+                    title: project.name,
+                    action: nil,
+                    keyEquivalent: ""
+                )
+                let actionMenu = NSMenu(title: project.name)
+                for action in project.actions {
+                    let actionItem = NSMenuItem(
+                        title: action.name,
+                        action: #selector(playActionFromDock(_:)),
+                        keyEquivalent: ""
+                    )
+                    actionItem.target = self
+                    actionItem.representedObject = DockActionRoute(
+                        projectID: project.id,
+                        actionID: action.id
+                    )
+                    actionItem.isEnabled = !action.frames.isEmpty
+                    actionMenu.addItem(actionItem)
+                }
+                projectItem.submenu = actionMenu
+                menu.addItem(projectItem)
+            }
+        }
         return menu
     }
 
@@ -50,6 +96,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func openSettingsFromDock() {
         model.openSettings()
+    }
+
+    @objc private func playActionFromDock(_ sender: NSMenuItem) {
+        guard let route = sender.representedObject as? DockActionRoute else { return }
+        model.playAction(id: route.actionID, projectID: route.projectID)
     }
 
     @objc private func handleGetURLEvent(_ event: NSAppleEventDescriptor, withReplyEvent: NSAppleEventDescriptor) {
@@ -86,10 +137,11 @@ private struct MenuBarContent: View {
             } else {
                 ForEach(model.visibleProjects) { project in
                     Menu(project.name) {
-                        ForEach(project.actions.filter(\.isEnabled)) { action in
+                        ForEach(project.actions) { action in
                             Button(action.name) {
                                 model.playAction(id: action.id, projectID: project.id)
                             }
+                            .disabled(action.frames.isEmpty)
                         }
                     }
                 }

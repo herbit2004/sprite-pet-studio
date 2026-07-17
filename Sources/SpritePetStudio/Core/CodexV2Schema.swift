@@ -7,6 +7,35 @@ struct CodexPetManifest: Codable {
     var description: String
     var spriteVersionNumber: Int
     var spritesheetPath: String
+
+    private enum CodingKeys: String, CodingKey {
+        case id, displayName, description, spriteVersionNumber, spritesheetPath
+    }
+
+    init(
+        id: String,
+        displayName: String,
+        description: String,
+        spriteVersionNumber: Int,
+        spritesheetPath: String
+    ) {
+        self.id = id
+        self.displayName = displayName
+        self.description = description
+        self.spriteVersionNumber = spriteVersionNumber
+        self.spritesheetPath = spritesheetPath
+    }
+
+    /// Codex v1 manifests predate `spriteVersionNumber` and sometimes omit
+    /// display metadata. The ID and atlas path are the only required fields.
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        displayName = try container.decodeIfPresent(String.self, forKey: .displayName) ?? id
+        description = try container.decodeIfPresent(String.self, forKey: .description) ?? ""
+        spriteVersionNumber = try container.decodeIfPresent(Int.self, forKey: .spriteVersionNumber) ?? 1
+        spritesheetPath = try container.decode(String.self, forKey: .spritesheetPath)
+    }
 }
 
 struct CodexV2ActionSpec: Identifiable {
@@ -139,7 +168,7 @@ enum CodexV2Schema {
         }
 
         project.actions = configuration.actions.map { actionLayout in
-            let codexSpec = configuration.compatibility == .codexV2
+            let codexSpec = configuration.compatibility.isCodex
                 ? actions.first(where: { $0.id == actionLayout.key })
                 : nil
             let previous = source.actions.first { $0.id == actionLayout.key }
@@ -177,7 +206,7 @@ enum CodexV2Schema {
                 frames: frames,
                 triggers: previous?.triggers ?? defaultTriggers(
                     for: actionLayout.key,
-                    isCodex: configuration.compatibility == .codexV2,
+                    isCodex: configuration.compatibility.isCodex,
                     isDefault: actionLayout.key == project.defaultActionID
                 )
             )
@@ -299,6 +328,53 @@ enum CodexV2Schema {
             trigger.distance = 520
             return [trigger]
         default: return [TriggerRule(kind: .manual)]
+        }
+    }
+}
+
+enum CodexV1Schema {
+    static let columns = 8
+    static let rows = 9
+    static let cellWidth = 192
+    static let cellHeight = 208
+    static let atlasWidth = 1536
+    static let atlasHeight = 1872
+
+    private static let frameCounts = [6, 8, 8, 4, 5, 8, 6, 6, 6]
+
+    static let configuration = AtlasConfiguration(
+        id: "codex-v1",
+        name: "Codex v1 固定图集",
+        configurationDescription: "Codex v1 桌宠的标准 8 × 9 图集协议，不包含 16 方向视线动作。",
+        isBuiltIn: true,
+        compatibility: .codexV1,
+        cellWidth: cellWidth,
+        cellHeight: cellHeight,
+        actions: zip(CodexV2Schema.actions.prefix(9), frameCounts).map { spec, frameCount in
+            AtlasActionConfiguration(
+                name: spec.name,
+                key: spec.id,
+                frameCount: frameCount,
+                occupiedRows: 1
+            )
+        }
+    )
+}
+
+enum CodexSchemas {
+    static let builtInConfigurations = [
+        CodexV2Schema.configuration,
+        CodexV1Schema.configuration
+    ]
+
+    static func configuration(forAtlasWidth width: Int, height: Int) -> AtlasConfiguration? {
+        switch (width, height) {
+        case (CodexV2Schema.atlasWidth, CodexV2Schema.atlasHeight):
+            return CodexV2Schema.configuration
+        case (CodexV1Schema.atlasWidth, CodexV1Schema.atlasHeight):
+            return CodexV1Schema.configuration
+        default:
+            return nil
         }
     }
 }

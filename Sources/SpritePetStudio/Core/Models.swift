@@ -11,7 +11,7 @@ struct AppDocument: Codable, Equatable {
         selectedProjectID: String,
         general: GeneralSettings,
         projects: [PetProjectDefinition],
-        atlasConfigurations: [AtlasConfiguration] = [CodexV2Schema.configuration]
+        atlasConfigurations: [AtlasConfiguration] = CodexSchemas.builtInConfigurations
     ) {
         self.selectedProjectID = selectedProjectID
         self.general = general
@@ -31,7 +31,7 @@ struct AppDocument: Codable, Equatable {
         atlasConfigurations = try container.decodeIfPresent(
             [AtlasConfiguration].self,
             forKey: .atlasConfigurations
-        ) ?? [CodexV2Schema.configuration]
+        ) ?? CodexSchemas.builtInConfigurations
     }
 }
 
@@ -190,14 +190,31 @@ struct AtlasActionConfiguration: Codable, Identifiable, Equatable {
 }
 
 enum AtlasCompatibility: String, Codable, CaseIterable, Identifiable {
+    case codexV1
     case codexV2
     case spritePetStudio
 
     var id: String { rawValue }
     var displayName: String {
         switch self {
+        case .codexV1: return "Codex v1"
         case .codexV2: return "Codex v2"
         case .spritePetStudio: return "SpritePet Studio"
+        }
+    }
+
+    var isCodex: Bool {
+        switch self {
+        case .codexV1, .codexV2: return true
+        case .spritePetStudio: return false
+        }
+    }
+
+    var spriteVersionNumber: Int {
+        switch self {
+        case .codexV1: return 1
+        case .codexV2: return 2
+        case .spritePetStudio: return 0
         }
     }
 }
@@ -495,6 +512,19 @@ extension PetActionDefinition {
 
     var playableFrames: [PetFrameDefinition] {
         frames
+    }
+
+    /// A transient, non-persisted action used by explicit preview commands.
+    /// It deliberately ignores the saved playback policy and always performs
+    /// exactly one full pass at the highest possible priority.
+    func manualPreviewCopy() -> PetActionDefinition {
+        var preview = self
+        preview.isEnabled = true
+        preview.playback = .once
+        preview.repeatCount = 1
+        preview.priority = .max
+        preview.interruption = .never
+        return preview
     }
 
     static func blank(index: Int) -> PetActionDefinition {
